@@ -91,16 +91,19 @@ fn main() {
     let parity = 'N';
     let data_bit = 8;
     let stop_bit = 2;
+    println!("Connecting to device on {}", args.serial_port);
     let mut modbus = Modbus::new_rtu(&args.serial_port, baud, parity, data_bit, stop_bit)
-        .expect("could not create modbus device");
+        .expect("Could not create modbus device");
     modbus
         .set_slave(DEVICE_ID)
-        .expect("could not set client device");
-    modbus.connect().expect("could not connect");
+        .expect("Could not set client device");
+    modbus
+        .connect()
+        .expect("Could not connect to client device");
     let mut data: [u16; 5] = [0; 5];
     modbus
         .read_registers(0x0000, 5, &mut data)
-        .expect("couldnt read registers");
+        .expect("Could not read registers");
     println!("voltage scaling (whole term): {}", get_floating(data[0]));
     println!(
         "voltage scaling (fractional term): {}",

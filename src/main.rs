@@ -86,7 +86,6 @@ struct Args {
 }
 
 fn main() {
-    println!("Hello, world!");
     let args = Args::parse();
     let baud = 9600;
     let parity = 'N';

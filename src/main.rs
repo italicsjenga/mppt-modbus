@@ -1,3 +1,4 @@
+use clap::Parser;
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
 
 const DEVICE_ID: u8 = 0x01;
@@ -77,14 +78,21 @@ impl Offsets {
     const VA_REF_FIXED_PCT: u16 = 0x005B;
 }
 
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    #[clap(short, long, default_value = "/dev/ttyUSB0")]
+    serial_port: String,
+}
+
 fn main() {
     println!("Hello, world!");
-    let device = "/dev/ttyUSB0";
+    let args = Args::parse();
     let baud = 9600;
     let parity = 'N';
     let data_bit = 8;
     let stop_bit = 2;
-    let mut modbus = Modbus::new_rtu(device, baud, parity, data_bit, stop_bit)
+    let mut modbus = Modbus::new_rtu(&args.serial_port, baud, parity, data_bit, stop_bit)
         .expect("could not create modbus device");
     modbus
         .set_slave(DEVICE_ID)
@@ -99,11 +107,12 @@ fn main() {
         "voltage scaling (fractional term): {}",
         get_floating(data[1])
     );
-    println!("current scaling (whole term): {}", get_floating(data[3]));
+    println!("current scaling (whole term): {}", get_floating(data[2]));
     println!(
         "current scaling (fractional term): {}",
-        get_floating(data[4])
+        get_floating(data[3])
     );
+    println!("software version: {}", data[4]);
 }
 
 fn get_floating(num: u16) -> f32 {

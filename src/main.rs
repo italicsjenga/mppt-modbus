@@ -100,23 +100,53 @@ fn main() {
     modbus
         .connect()
         .expect("Could not connect to client device");
-    let mut data: [u16; 5] = [0; 5];
+    let mut scaling_data: [u16; 4] = [0; 4];
     modbus
-        .read_registers(0x0000, 5, &mut data)
-        .expect("Could not read registers");
-    println!("voltage scaling (whole term): {}", get_floating(data[0]));
+        .read_registers(0x0000, 4, &mut scaling_data)
+        .expect("couldnt");
+    let v_scale = scaling_data[0] as f32 + (scaling_data[1] as f32 / f32::powf(2., 16.));
+    let i_scale = scaling_data[2] as f32 + (scaling_data[3] as f32 / f32::powf(2., 16.));
+    let mut data: [u16; 1] = [0; 1];
+    modbus
+        .read_registers(Offsets::T_BATT, 1, &mut data)
+        .expect("couldnt");
+    // println!("d: {}", (data[0] as f32 * v_scale) / 32768.);
+    println!("battery temp: {}", data[0]);
+    modbus
+        .read_registers(Offsets::CHARGE_STATE, 1, &mut data)
+        .expect("couldnt");
+    println!("charge state: {}", data[0]);
+    modbus
+        .read_registers(Offsets::ADC_IB_F_1M, 1, &mut data)
+        .expect("couldnt");
     println!(
-        "voltage scaling (fractional term): {}",
-        get_floating(data[1])
+        "current (1 min avg): {}",
+        data[0] as f32 * i_scale * f32::powf(2., -15.)
     );
-    println!("current scaling (whole term): {}", get_floating(data[2]));
+    modbus
+        .read_registers(Offsets::ADC_VB_F_1M, 1, &mut data)
+        .expect("couldnt");
     println!(
-        "current scaling (fractional term): {}",
-        get_floating(data[3])
+        "voltage (1 min avg): {}",
+        data[0] as f32 * v_scale * f32::powf(2., -15.)
     );
-    println!("software version: {}", data[4]);
+    // let mut data: [u16; 5] = [0; 5];
+    // modbus
+    //     .read_registers(0x0000, 5, &mut data)
+    //     .expect("Could not read registers");
+    // println!("voltage scaling (whole term): {}", get_floating(data[0]));
+    // println!(
+    //     "voltage scaling (fractional term): {}",
+    //     get_floating(data[1])
+    // );
+    // println!("current scaling (whole term): {}", get_floating(data[2]));
+    // println!(
+    //     "current scaling (fractional term): {}",
+    //     get_floating(data[3])
+    // );
+    // println!("software version: {}", data[4]);
 }
 
 fn get_floating(num: u16) -> f32 {
-    num as f32 * 100. / 32768.
+    num as f32 * 16.92 / 65536.0
 }

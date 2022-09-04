@@ -279,4 +279,9 @@ fn main() {
     };
 
     println!("eeprom: {:#?}", eeprom_data);
+    let value = 50.;
+    let value_scaled = ((value / info.v_scale) / f32::powf(2., -15.)) as u16;
+    // modbus
+    //     .write_register(OffsetsEeprom::EV_soc_g_gy as u16, value_scaled)
+    //     .expect("could not set value");
 }

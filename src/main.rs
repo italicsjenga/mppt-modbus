@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use clap::Parser;
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
 use serde::{Deserialize, Serialize};
@@ -125,6 +127,7 @@ struct Info {
     v_scale: f32,
     i_scale: f32,
 }
+
 impl Info {
     pub fn from(data: &[u16]) -> Self {
         Self {
@@ -155,6 +158,13 @@ fn main() {
     let parity = 'N';
     let data_bit = 8;
     let stop_bit = 2;
+    if !Path::new(&args.serial_port).exists() {
+        println!(
+            "Serial port {} does not exist\nTry \"mppt-control --help\" for usage instructions",
+            args.serial_port
+        );
+        return;
+    }
     println!("Connecting to device on {}", args.serial_port);
     let mut modbus = Modbus::new_rtu(&args.serial_port, baud, parity, data_bit, stop_bit)
         .expect("Could not create modbus device");

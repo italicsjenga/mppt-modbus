@@ -382,7 +382,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "modbus-test"
+name = "mppt-control"
 version = "0.1.0"
 dependencies = [
  "bincode",

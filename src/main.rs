@@ -8,7 +8,7 @@ use crate::offsets::{OffsetsEeprom, OffsetsRam};
 const DEVICE_ID: u8 = 0x01;
 const RAM_DATA_SIZE: u16 = 0x005B;
 const EEPROM_BEGIN: u16 = 0xE000;
-const EEPROM_DATA_SIZE: u16 = 0xE021 - EEPROM_BEGIN;
+const EEPROM_DATA_SIZE: u16 = 0x0021;
 // const EEPROM_DATA_SIZE: u16 = 0xE0CD - EEPROM_BEGIN;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -104,7 +104,7 @@ struct MpptEeprom {
     ETb_max: u16,
     ETb_min: u16,
     EV_soc_g_gy: f32,
-    EV_soc_gy_g: f32,
+    EV_soc_gy_y: f32,
     EV_soc_y_yr: f32,
     EV_soc_yr_r: f32,
     Emodbus_id: u16,
@@ -266,7 +266,7 @@ fn main() {
         ETb_max: data_in[OffsetsEeprom::ETb_max],
         ETb_min: data_in[OffsetsEeprom::ETb_min],
         EV_soc_g_gy: info.scale_voltage(&data_in[OffsetsEeprom::EV_soc_g_gy]),
-        EV_soc_gy_g: info.scale_voltage(&data_in[OffsetsEeprom::EV_soc_gy_g]),
+        EV_soc_gy_y: info.scale_voltage(&data_in[OffsetsEeprom::EV_soc_gy_y]),
         EV_soc_y_yr: info.scale_voltage(&data_in[OffsetsEeprom::EV_soc_y_yr]),
         EV_soc_yr_r: info.scale_voltage(&data_in[OffsetsEeprom::EV_soc_yr_r]),
         Emodbus_id: data_in[OffsetsEeprom::Emodbus_id],
@@ -282,6 +282,6 @@ fn main() {
     let value = 50.;
     let value_scaled = ((value / info.v_scale) / f32::powf(2., -15.)) as u16;
     // modbus
-    //     .write_register(OffsetsEeprom::EV_soc_g_gy as u16, value_scaled)
+    //     .write_register(EEPROM_BEGIN as u16 + OffsetsEeprom::EV_soc_g_gy as u16, value_scaled)
     //     .expect("could not set value");
 }

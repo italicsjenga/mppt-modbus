@@ -1,6 +1,6 @@
 use std::{path::Path, process::Command};
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
 use serde::{Deserialize, Serialize};
 
@@ -116,7 +116,7 @@ struct MpptEeprom {
     EVa_ref_fixed_pct_init: f32,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[clap(author, about, long_about = None)]
 struct Args {
     /// Serial port to connect to MPPT
@@ -126,6 +126,18 @@ struct Args {
     /// list serial ports on this system
     #[clap(long)]
     get_serial_ports: bool,
+
+    #[clap(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Get single EEPROM value
+    Get { name: String },
+
+    /// Set single EEPROM value
+    Set { name: String },
 }
 
 struct Info {
@@ -167,7 +179,7 @@ fn main() {
             .expect("failed to execute process");
         let s = match std::str::from_utf8(&output.stdout) {
             Ok(v) => v,
-            Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+            Err(e) => panic!("Failed reading internal command output: {}", e),
         };
         println!("{}", s);
         return;
@@ -184,6 +196,19 @@ fn main() {
         );
         return;
     }
+
+    match args.command {
+        Some(Commands::Get { name }) => {
+            println!("get var {}", name);
+            return;
+        }
+        Some(Commands::Set { name }) => {
+            println!("set var {}", name);
+            return;
+        }
+        None => (),
+    }
+
     println!("Connecting to device on {}", args.serial_port);
     let mut modbus = Modbus::new_rtu(&args.serial_port, baud, parity, data_bit, stop_bit)
         .expect("Could not create modbus device");

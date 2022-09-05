@@ -1,6 +1,6 @@
 use std::{path::Path, process::Command};
 
-use clap::{Parser, Subcommand};
+use clap::{AppSettings, Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
 use serde::{Deserialize, Serialize};
 
@@ -117,6 +117,7 @@ struct MpptEeprom {
 }
 
 #[derive(Parser)]
+#[clap(global_setting = AppSettings::DisableHelpSubcommand)]
 #[clap(author, about, long_about = None)]
 struct Args {
     /// Serial port to connect to MPPT

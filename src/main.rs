@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, process::Command};
 
 use clap::Parser;
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
@@ -117,10 +117,15 @@ struct MpptEeprom {
 }
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, about, long_about = None)]
 struct Args {
+    /// Serial port to connect to MPPT
     #[clap(short, long, default_value = "/dev/ttyUSB0")]
     serial_port: String,
+
+    /// list serial ports on this system
+    #[clap(long)]
+    get_serial_ports: bool,
 }
 
 struct Info {
@@ -154,10 +159,24 @@ impl Info {
 
 fn main() {
     let args = Args::parse();
+    if args.get_serial_ports {
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("ls /dev/tty*")
+            .output()
+            .expect("failed to execute process");
+        let s = match std::str::from_utf8(&output.stdout) {
+            Ok(v) => v,
+            Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+        };
+        println!("{}", s);
+        return;
+    }
     let baud = 9600;
     let parity = 'N';
     let data_bit = 8;
     let stop_bit = 2;
+
     if !Path::new(&args.serial_port).exists() {
         println!(
             "Serial port {} does not exist\nTry \"mppt-control --help\" for usage instructions",

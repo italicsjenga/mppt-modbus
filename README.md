@@ -1,0 +1,1 @@
+for [Tristar MPPT](http://support.morningstarcorp.com/wp-content/uploads/2014/07/MS-002582_v11.pdf)

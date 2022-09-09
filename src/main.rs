@@ -118,6 +118,7 @@ struct MpptEeprom {
 
 trait Scaled {
     fn get_scaled(&self, info: &Info) -> f32;
+    fn new(input: f32, info: &Info) -> Self;
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -129,12 +130,10 @@ impl Scaled for Tempcomp {
     fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * info.v_scale * f32::powf(2., -16.)
     }
-}
 
-impl Tempcomp {
-    pub fn new(voltage: f32, info: &Info) -> Self {
+    fn new(input: f32, info: &Info) -> Self {
         Self {
-            data: ((voltage / f32::powf(2., -16.)) / info.v_scale) as u16,
+            data: ((input / f32::powf(2., -16.)) / info.v_scale) as u16,
         }
     }
 }
@@ -148,12 +147,10 @@ impl Scaled for Voltage {
     fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * info.v_scale * f32::powf(2., -15.)
     }
-}
 
-impl Voltage {
-    fn new(voltage: f32, info: &Info) -> Self {
+    fn new(input: f32, info: &Info) -> Self {
         Self {
-            data: ((voltage / f32::powf(2., -15.)) / info.v_scale) as u16,
+            data: ((input / f32::powf(2., -15.)) / info.v_scale) as u16,
         }
     }
 }
@@ -167,12 +164,10 @@ impl Scaled for VoltagePercentage {
     fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * 100. * f32::powf(2., -16.)
     }
-}
 
-impl VoltagePercentage {
-    fn new(voltage: f32, info: &Info) -> Self {
+    fn new(input: f32, info: &Info) -> Self {
         Self {
-            data: ((voltage / f32::powf(2., -16.)) / 100.) as u16,
+            data: ((input / f32::powf(2., -16.)) / 100.) as u16,
         }
     }
 }
@@ -186,12 +181,10 @@ impl Scaled for Current {
     fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * info.i_scale * f32::powf(2., -15.)
     }
-}
 
-impl Current {
-    fn new(current: f32, info: &Info) -> Self {
+    fn new(input: f32, info: &Info) -> Self {
         Self {
-            data: ((current / f32::powf(2., -15.)) / info.i_scale) as u16,
+            data: ((input / f32::powf(2., -15.)) / info.i_scale) as u16,
         }
     }
 }
@@ -205,11 +198,9 @@ impl Scaled for Raw {
     fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32
     }
-}
 
-impl Raw {
-    fn new(input: u16, info: &Info) -> Self {
-        Self { data: input }
+    fn new(input: f32, info: &Info) -> Self {
+        Self { data: input as u16 }
     }
 }
 

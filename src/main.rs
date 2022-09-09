@@ -119,6 +119,7 @@ struct MpptEeprom {
 trait Scaled {
     fn get_scaled(&self, info: &Info) -> f32;
     fn new(input: f32, info: &Info) -> Self;
+    fn from_u16(input: u16) -> Self;
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -135,6 +136,10 @@ impl Scaled for Tempcomp {
         Self {
             data: ((input / f32::powf(2., -16.)) / info.v_scale) as u16,
         }
+    }
+
+    fn from_u16(input: u16) -> Self {
+        Self { data: input }
     }
 }
 
@@ -153,6 +158,10 @@ impl Scaled for Voltage {
             data: ((input / f32::powf(2., -15.)) / info.v_scale) as u16,
         }
     }
+
+    fn from_u16(input: u16) -> Self {
+        Self { data: input }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -169,6 +178,10 @@ impl Scaled for VoltagePercentage {
         Self {
             data: ((input / f32::powf(2., -16.)) / 100.) as u16,
         }
+    }
+
+    fn from_u16(input: u16) -> Self {
+        Self { data: input }
     }
 }
 
@@ -187,6 +200,10 @@ impl Scaled for Current {
             data: ((input / f32::powf(2., -15.)) / info.i_scale) as u16,
         }
     }
+
+    fn from_u16(input: u16) -> Self {
+        Self { data: input }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -201,6 +218,10 @@ impl Scaled for Raw {
 
     fn new(input: f32, _: &Info) -> Self {
         Self { data: input as u16 }
+    }
+
+    fn from_u16(input: u16) -> Self {
+        Self { data: input }
     }
 }
 
@@ -388,87 +409,35 @@ fn main() {
         .expect("could not get eeprom data");
 
     let eeprom_data = MpptEeprom {
-        ev_absorp: Voltage {
-            data: data_in[OffsetsEeprom::EV_ABSORP],
-        },
-        ev_float: Voltage {
-            data: data_in[OffsetsEeprom::EV_FLOAT],
-        },
-        et_absorp: Raw {
-            data: data_in[OffsetsEeprom::ET_ABSORP],
-        },
-        et_absorp_ext: Raw {
-            data: data_in[OffsetsEeprom::ET_ABSORP_EXT],
-        },
-        ev_absorp_ext: Voltage {
-            data: data_in[OffsetsEeprom::EV_ABSORP_EXT],
-        },
-        ev_float_cancel: Voltage {
-            data: data_in[OffsetsEeprom::EV_FLOAT_CANCEL],
-        },
-        et_float_exit_cum: Raw {
-            data: data_in[OffsetsEeprom::ET_FLOAT_EXIT_CUM],
-        },
-        ev_eq: Voltage {
-            data: data_in[OffsetsEeprom::EV_EQ],
-        },
-        et_eqcalendar: Raw {
-            data: data_in[OffsetsEeprom::ET_EQCALENDAR],
-        },
-        et_eq_above: Raw {
-            data: data_in[OffsetsEeprom::ET_EQ_ABOVE],
-        },
-        et_eq_reg: Raw {
-            data: data_in[OffsetsEeprom::ET_EQ_REG],
-        },
-        et_batt_service: Raw {
-            data: data_in[OffsetsEeprom::ET_BATT_SERVICE],
-        },
-        ev_tempcomp: Tempcomp {
-            data: data_in[OffsetsEeprom::EV_TEMPCOMP],
-        },
-        ev_hvd: Voltage {
-            data: data_in[OffsetsEeprom::EV_HVD],
-        },
-        ev_hvr: Voltage {
-            data: data_in[OffsetsEeprom::EV_HVR],
-        },
-        evb_ref_lim: Voltage {
-            data: data_in[OffsetsEeprom::EVB_REF_LIM],
-        },
-        etb_max: Raw {
-            data: data_in[OffsetsEeprom::ETB_MAX],
-        },
-        etb_min: Raw {
-            data: data_in[OffsetsEeprom::ETB_MIN],
-        },
-        ev_soc_g_gy: Voltage {
-            data: data_in[OffsetsEeprom::EV_SOC_G_GY],
-        },
-        ev_soc_gy_y: Voltage {
-            data: data_in[OffsetsEeprom::EV_SOC_GY_Y],
-        },
-        ev_soc_y_yr: Voltage {
-            data: data_in[OffsetsEeprom::EV_SOC_Y_YR],
-        },
-        ev_soc_yr_r: Voltage {
-            data: data_in[OffsetsEeprom::EV_SOC_YR_R],
-        },
-        emodbus_id: Raw {
-            data: data_in[OffsetsEeprom::EMODBUS_ID],
-        },
-        emeterbus_id: Raw {
-            data: data_in[OffsetsEeprom::EMETERBUS_ID],
-        },
-        eib_lim: Current {
-            data: data_in[OffsetsEeprom::EIB_LIM],
-        },
-        eva_ref_fixed_init: Voltage {
-            data: data_in[OffsetsEeprom::EVA_REF_FIXED_INIT],
-        },
-        eva_ref_fixed_pct_init: VoltagePercentage {
-            data: data_in[OffsetsEeprom::EVA_REF_FIXED_PCT_INIT],
-        },
+        ev_absorp: Voltage::from_u16(data_in[OffsetsEeprom::EV_ABSORP]),
+        ev_float: Voltage::from_u16(data_in[OffsetsEeprom::EV_FLOAT]),
+        et_absorp: Raw::from_u16(data_in[OffsetsEeprom::ET_ABSORP]),
+        et_absorp_ext: Raw::from_u16(data_in[OffsetsEeprom::ET_ABSORP_EXT]),
+        ev_absorp_ext: Voltage::from_u16(data_in[OffsetsEeprom::EV_ABSORP_EXT]),
+        ev_float_cancel: Voltage::from_u16(data_in[OffsetsEeprom::EV_FLOAT_CANCEL]),
+        et_float_exit_cum: Raw::from_u16(data_in[OffsetsEeprom::ET_FLOAT_EXIT_CUM]),
+        ev_eq: Voltage::from_u16(data_in[OffsetsEeprom::EV_EQ]),
+        et_eqcalendar: Raw::from_u16(data_in[OffsetsEeprom::ET_EQCALENDAR]),
+        et_eq_above: Raw::from_u16(data_in[OffsetsEeprom::ET_EQ_ABOVE]),
+        et_eq_reg: Raw::from_u16(data_in[OffsetsEeprom::ET_EQ_REG]),
+        et_batt_service: Raw::from_u16(data_in[OffsetsEeprom::ET_BATT_SERVICE]),
+        ev_tempcomp: Tempcomp::from_u16(data_in[OffsetsEeprom::EV_TEMPCOMP]),
+        ev_hvd: Voltage::from_u16(data_in[OffsetsEeprom::EV_HVD]),
+        ev_hvr: Voltage::from_u16(data_in[OffsetsEeprom::EV_HVR]),
+        evb_ref_lim: Voltage::from_u16(data_in[OffsetsEeprom::EVB_REF_LIM]),
+        etb_max: Raw::from_u16(data_in[OffsetsEeprom::ETB_MAX]),
+        etb_min: Raw::from_u16(data_in[OffsetsEeprom::ETB_MIN]),
+        ev_soc_g_gy: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_G_GY]),
+        ev_soc_gy_y: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_GY_Y]),
+        ev_soc_y_yr: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_Y_YR]),
+        ev_soc_yr_r: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_YR_R]),
+        emodbus_id: Raw::from_u16(data_in[OffsetsEeprom::EMODBUS_ID]),
+        emeterbus_id: Raw::from_u16(data_in[OffsetsEeprom::EMETERBUS_ID]),
+        eib_lim: Current::from_u16(data_in[OffsetsEeprom::EIB_LIM]),
+        eva_ref_fixed_init: Voltage::from_u16(data_in[OffsetsEeprom::EVA_REF_FIXED_INIT]),
+        eva_ref_fixed_pct_init: VoltagePercentage::from_u16(
+            data_in[OffsetsEeprom::EVA_REF_FIXED_PCT_INIT],
+        ),
     };
 
     println!("eeprom: {:#?}", eeprom_data);

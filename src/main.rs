@@ -16,104 +16,104 @@ const EEPROM_DATA_SIZE: u16 = 0x0021;
 #[derive(Serialize, Deserialize, Debug)]
 struct MpptRam {
     // scaling values
-    V_PU: f32,
-    I_PU: f32,
-    VER_SW: u16,
+    v_pu: f32,
+    i_pu: f32,
+    ver_sw: u16,
     // filtered ADC
-    ADC_VB_F_MED: f32,
-    ADC_VBTERM_F: f32,
-    ADC_VBS_F: f32,
-    ADC_VA_F: f32,
-    ADC_IB_F_SHADOW: f32,
-    ADC_IA_F_SHADOW: f32,
-    ADC_P12_F: f32,
-    ADC_P3_F: f32,
-    ADC_PMETER_F: f32,
-    ADC_P18_F: f32,
-    ADC_V_REF: f32,
+    adc_vb_f_med: f32,
+    adc_vbterm_f: f32,
+    adc_vbs_f: f32,
+    adc_va_f: f32,
+    adc_ib_f_shadow: f32,
+    adc_ia_f_shadow: f32,
+    adc_p12_f: f32,
+    adc_p3_f: f32,
+    adc_pmeter_f: f32,
+    adc_p18_f: f32,
+    adc_v_ref: f32,
     // temperatures
-    T_HS: u16,
-    T_RTS: u16,
-    T_BATT: u16,
+    t_hs: u16,
+    t_rts: u16,
+    t_batt: u16,
     // status
-    ADC_VB_F_1M: f32,
-    ADC_IB_F_1M: f32,
-    VB_MIN: f32,
-    VB_MAX: f32,
-    HOURMETER_HI: u16,
-    HOURMETER_LO: u16,
-    FAULT_ALL: u16,
-    ALARM_HI: u16,
-    ALARM_LO: u16,
-    DIP_ALL: u16,
-    LED_STATE: u16,
+    adc_vb_f_1m: f32,
+    adc_ib_f_1m: f32,
+    vb_min: f32,
+    vb_max: f32,
+    hourmeter_hi: u16,
+    hourmeter_lo: u16,
+    fault_all: u16,
+    alarm_hi: u16,
+    alarm_lo: u16,
+    dip_all: u16,
+    led_state: u16,
     // charger
-    CHARGE_STATE: u16,
-    VB_REF: f32,
-    AHC_R_HI: u16,
-    AHC_R_LO: u16,
-    AHC_T_HI: u16,
-    AHC_T_LO: u16,
-    KWHC_R: u16,
-    KWHC_T: u16,
+    charge_state: u16,
+    vb_ref: f32,
+    ahc_r_hi: u16,
+    ahc_r_lo: u16,
+    ahc_t_hi: u16,
+    ahc_t_lo: u16,
+    kwhc_r: u16,
+    kwhc_t: u16,
     // MpptRam
-    POWER_OUT_SHADOW: f32,
-    POWER_IN_SHADOW: f32,
-    SWEEP_PIN_MAX: f32,
-    SWEEP_VMP: f32,
-    SWEEP_VOC: f32,
+    power_out_shadow: f32,
+    power_in_shadow: f32,
+    sweep_pin_max: f32,
+    sweep_vmp: f32,
+    sweep_voc: f32,
     // logger - today's values
-    VB_MIN_DAILY: f32,
-    VB_MAX_DAILY: f32,
-    VA_MAX_DAILY: f32,
-    AHC_DAILY: f32,
-    WHC_DAILY: u16,
-    FLAGS_DAILY: u16,
-    POUT_MAX_DAILY: f32,
-    TB_MIN_DAILY: u16,
-    TB_MAX_DAILY: u16,
-    FAULT_DAILY: u16,
-    ALARM_DAILY_HI: u16,
-    ALARM_DAILY_LO: u16,
-    TIME_AB_DAILY: u16,
-    TIME_EQ_DAILY: u16,
-    TIME_FL_DAILY: u16,
+    vb_min_daily: f32,
+    vb_max_daily: f32,
+    va_max_daily: f32,
+    ahc_daily: f32,
+    whc_daily: u16,
+    flags_daily: u16,
+    pout_max_daily: f32,
+    tb_min_daily: u16,
+    tb_max_daily: u16,
+    fault_daily: u16,
+    alarm_daily_hi: u16,
+    alarm_daily_lo: u16,
+    time_ab_daily: u16,
+    time_eq_daily: u16,
+    time_fl_daily: u16,
     // manual control
-    IB_REF_SLAVE: f32,
-    VB_REF_SLAVE: f32,
-    VA_REF_FIXED: f32,
-    VA_REF_FIXED_PCT: f32,
+    ib_ref_slave: f32,
+    vb_ref_slave: f32,
+    va_ref_fixed: f32,
+    va_ref_fixed_pct: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct MpptEeprom {
-    EV_absorp: Voltage,
-    EV_float: Voltage,
-    Et_absorp: Raw,
-    Et_absorp_ext: Raw,
-    EV_absorp_ext: Voltage,
-    EV_float_cancel: Voltage,
-    Et_float_exit_cum: Raw,
-    EV_eq: Voltage,
-    Et_eqcalendar: Raw,
-    Et_eq_above: Raw,
-    Et_eq_reg: Raw,
-    Et_batt_service: Raw,
-    EV_tempcomp: Tempcomp,
-    EV_hvd: Voltage,
-    EV_hvr: Voltage,
-    Evb_ref_lim: Voltage,
-    ETb_max: Raw,
-    ETb_min: Raw,
-    EV_soc_g_gy: Voltage,
-    EV_soc_gy_y: Voltage,
-    EV_soc_y_yr: Voltage,
-    EV_soc_yr_r: Voltage,
-    Emodbus_id: Raw,
-    Emeterbus_id: Raw,
-    EIb_lim: Current,
-    EVa_ref_fixed_init: Voltage,
-    EVa_ref_fixed_pct_init: VoltagePercentage,
+    ev_absorp: Voltage,
+    ev_float: Voltage,
+    et_absorp: Raw,
+    et_absorp_ext: Raw,
+    ev_absorp_ext: Voltage,
+    ev_float_cancel: Voltage,
+    et_float_exit_cum: Raw,
+    ev_eq: Voltage,
+    et_eqcalendar: Raw,
+    et_eq_above: Raw,
+    et_eq_reg: Raw,
+    et_batt_service: Raw,
+    ev_tempcomp: Tempcomp,
+    ev_hvd: Voltage,
+    ev_hvr: Voltage,
+    evb_ref_lim: Voltage,
+    etb_max: Raw,
+    etb_min: Raw,
+    ev_soc_g_gy: Voltage,
+    ev_soc_gy_y: Voltage,
+    ev_soc_y_yr: Voltage,
+    ev_soc_yr_r: Voltage,
+    emodbus_id: Raw,
+    emeterbus_id: Raw,
+    eib_lim: Current,
+    eva_ref_fixed_init: Voltage,
+    eva_ref_fixed_pct_init: VoltagePercentage,
 }
 
 trait Scaled {
@@ -161,11 +161,11 @@ struct VoltagePercentage {
 }
 
 impl Scaled for VoltagePercentage {
-    fn get_scaled(&self, info: &Info) -> f32 {
+    fn get_scaled(&self, _: &Info) -> f32 {
         self.data as f32 * 100. * f32::powf(2., -16.)
     }
 
-    fn new(input: f32, info: &Info) -> Self {
+    fn new(input: f32, _: &Info) -> Self {
         Self {
             data: ((input / f32::powf(2., -16.)) / 100.) as u16,
         }
@@ -195,11 +195,11 @@ struct Raw {
 }
 
 impl Scaled for Raw {
-    fn get_scaled(&self, info: &Info) -> f32 {
+    fn get_scaled(&self, _: &Info) -> f32 {
         self.data as f32
     }
 
-    fn new(input: f32, info: &Info) -> Self {
+    fn new(input: f32, _: &Info) -> Self {
         Self { data: input as u16 }
     }
 }
@@ -313,72 +313,72 @@ fn main() {
         .expect("couldnt");
     let info = Info::from(&data_in);
     let ram_data = MpptRam {
-        V_PU: info.scale_voltage_f(
+        v_pu: info.scale_voltage_f(
             data_in[OffsetsRam::V_PU_HI] as f32
                 + (data_in[OffsetsRam::V_PU_LO] as f32 / f32::powf(2., 16.)),
         ),
-        I_PU: info.scale_current_f(
+        i_pu: info.scale_current_f(
             data_in[OffsetsRam::I_PU_HI] as f32
                 + (data_in[OffsetsRam::I_PU_LO] as f32 / f32::powf(2., 16.)),
         ),
-        VER_SW: data_in[OffsetsRam::VER_SW],
-        ADC_VB_F_MED: info.scale_voltage(&data_in[OffsetsRam::ADC_VB_F_MED]),
-        ADC_VBTERM_F: info.scale_voltage(&data_in[OffsetsRam::ADC_VBTERM_F]),
-        ADC_VBS_F: info.scale_voltage(&data_in[OffsetsRam::ADC_VBS_F]),
-        ADC_VA_F: info.scale_voltage(&data_in[OffsetsRam::ADC_VA_F]),
-        ADC_IB_F_SHADOW: info.scale_current(&data_in[OffsetsRam::ADC_IB_F_SHADOW]),
-        ADC_IA_F_SHADOW: info.scale_current(&data_in[OffsetsRam::ADC_IA_F_SHADOW]),
-        ADC_P12_F: data_in[OffsetsRam::ADC_P12_F] as f32 * 18.618 * f32::powf(2., -15.),
-        ADC_P3_F: data_in[OffsetsRam::ADC_P3_F] as f32 * 6.6 * f32::powf(2., -15.),
-        ADC_PMETER_F: data_in[OffsetsRam::ADC_PMETER_F] as f32 * 18.618 * f32::powf(2., -15.),
-        ADC_P18_F: data_in[OffsetsRam::ADC_P18_F] as f32 * 3. * f32::powf(2., -15.),
-        ADC_V_REF: data_in[OffsetsRam::ADC_V_REF] as f32 * 3. * f32::powf(2., -15.),
-        T_HS: data_in[OffsetsRam::T_HS],
-        T_RTS: data_in[OffsetsRam::T_RTS],
-        T_BATT: data_in[OffsetsRam::T_BATT],
-        ADC_VB_F_1M: info.scale_voltage(&data_in[OffsetsRam::ADC_VB_F_1M]),
-        ADC_IB_F_1M: info.scale_current(&data_in[OffsetsRam::ADC_IB_F_1M]),
-        VB_MIN: info.scale_voltage(&data_in[OffsetsRam::VB_MIN]),
-        VB_MAX: info.scale_voltage(&data_in[OffsetsRam::VB_MAX]),
-        HOURMETER_HI: data_in[OffsetsRam::HOURMETER_HI],
-        HOURMETER_LO: data_in[OffsetsRam::HOURMETER_LO],
-        FAULT_ALL: data_in[OffsetsRam::FAULT_ALL],
-        ALARM_HI: data_in[OffsetsRam::ALARM_HI],
-        ALARM_LO: data_in[OffsetsRam::ALARM_LO],
-        DIP_ALL: data_in[OffsetsRam::DIP_ALL],
-        LED_STATE: data_in[OffsetsRam::LED_STATE],
-        CHARGE_STATE: data_in[OffsetsRam::CHARGE_STATE],
-        VB_REF: info.scale_voltage(&data_in[OffsetsRam::VB_REF]),
-        AHC_R_HI: data_in[OffsetsRam::AHC_R_HI],
-        AHC_R_LO: data_in[OffsetsRam::AHC_R_LO],
-        AHC_T_HI: data_in[OffsetsRam::AHC_T_HI],
-        AHC_T_LO: data_in[OffsetsRam::AHC_T_LO],
-        KWHC_R: data_in[OffsetsRam::KWHC_R],
-        KWHC_T: data_in[OffsetsRam::KWHC_T],
-        POWER_OUT_SHADOW: info.scale_power(&data_in[OffsetsRam::AHC_R_HI]),
-        POWER_IN_SHADOW: info.scale_power(&data_in[OffsetsRam::POWER_IN_SHADOW]),
-        SWEEP_PIN_MAX: info.scale_power(&data_in[OffsetsRam::SWEEP_PIN_MAX]),
-        SWEEP_VMP: info.scale_voltage(&data_in[OffsetsRam::SWEEP_VMP]),
-        SWEEP_VOC: info.scale_voltage(&data_in[OffsetsRam::SWEEP_VOC]),
-        VB_MIN_DAILY: info.scale_voltage(&data_in[OffsetsRam::VB_MIN_DAILY]),
-        VB_MAX_DAILY: info.scale_voltage(&data_in[OffsetsRam::VB_MAX_DAILY]),
-        VA_MAX_DAILY: info.scale_voltage(&data_in[OffsetsRam::VA_MAX_DAILY]),
-        AHC_DAILY: data_in[OffsetsRam::AHC_DAILY] as f32 * 0.1,
-        WHC_DAILY: data_in[OffsetsRam::WHC_DAILY],
-        FLAGS_DAILY: data_in[OffsetsRam::FLAGS_DAILY],
-        POUT_MAX_DAILY: info.scale_power(&data_in[OffsetsRam::POUT_MAX_DAILY]),
-        TB_MIN_DAILY: data_in[OffsetsRam::TB_MIN_DAILY],
-        TB_MAX_DAILY: data_in[OffsetsRam::TB_MAX_DAILY],
-        FAULT_DAILY: data_in[OffsetsRam::FAULT_DAILY],
-        ALARM_DAILY_HI: data_in[OffsetsRam::ALARM_DAILY_HI],
-        ALARM_DAILY_LO: data_in[OffsetsRam::ALARM_DAILY_LO],
-        TIME_AB_DAILY: data_in[OffsetsRam::TIME_AB_DAILY],
-        TIME_EQ_DAILY: data_in[OffsetsRam::TIME_EQ_DAILY],
-        TIME_FL_DAILY: data_in[OffsetsRam::TIME_FL_DAILY],
-        IB_REF_SLAVE: data_in[OffsetsRam::IB_REF_SLAVE] as f32 * 80. * f32::powf(2., -15.),
-        VB_REF_SLAVE: info.scale_voltage(&data_in[OffsetsRam::VB_REF_SLAVE]),
-        VA_REF_FIXED: info.scale_voltage(&data_in[OffsetsRam::VA_REF_FIXED]),
-        VA_REF_FIXED_PCT: data_in[OffsetsRam::VA_REF_FIXED_PCT] as f32 * 100. * f32::powf(2., -16.),
+        ver_sw: data_in[OffsetsRam::VER_SW],
+        adc_vb_f_med: info.scale_voltage(&data_in[OffsetsRam::ADC_VB_F_MED]),
+        adc_vbterm_f: info.scale_voltage(&data_in[OffsetsRam::ADC_VBTERM_F]),
+        adc_vbs_f: info.scale_voltage(&data_in[OffsetsRam::ADC_VBS_F]),
+        adc_va_f: info.scale_voltage(&data_in[OffsetsRam::ADC_VA_F]),
+        adc_ib_f_shadow: info.scale_current(&data_in[OffsetsRam::ADC_IB_F_SHADOW]),
+        adc_ia_f_shadow: info.scale_current(&data_in[OffsetsRam::ADC_IA_F_SHADOW]),
+        adc_p12_f: data_in[OffsetsRam::ADC_P12_F] as f32 * 18.618 * f32::powf(2., -15.),
+        adc_p3_f: data_in[OffsetsRam::ADC_P3_F] as f32 * 6.6 * f32::powf(2., -15.),
+        adc_pmeter_f: data_in[OffsetsRam::ADC_PMETER_F] as f32 * 18.618 * f32::powf(2., -15.),
+        adc_p18_f: data_in[OffsetsRam::ADC_P18_F] as f32 * 3. * f32::powf(2., -15.),
+        adc_v_ref: data_in[OffsetsRam::ADC_V_REF] as f32 * 3. * f32::powf(2., -15.),
+        t_hs: data_in[OffsetsRam::T_HS],
+        t_rts: data_in[OffsetsRam::T_RTS],
+        t_batt: data_in[OffsetsRam::T_BATT],
+        adc_vb_f_1m: info.scale_voltage(&data_in[OffsetsRam::ADC_VB_F_1M]),
+        adc_ib_f_1m: info.scale_current(&data_in[OffsetsRam::ADC_IB_F_1M]),
+        vb_min: info.scale_voltage(&data_in[OffsetsRam::VB_MIN]),
+        vb_max: info.scale_voltage(&data_in[OffsetsRam::VB_MAX]),
+        hourmeter_hi: data_in[OffsetsRam::HOURMETER_HI],
+        hourmeter_lo: data_in[OffsetsRam::HOURMETER_LO],
+        fault_all: data_in[OffsetsRam::FAULT_ALL],
+        alarm_hi: data_in[OffsetsRam::ALARM_HI],
+        alarm_lo: data_in[OffsetsRam::ALARM_LO],
+        dip_all: data_in[OffsetsRam::DIP_ALL],
+        led_state: data_in[OffsetsRam::LED_STATE],
+        charge_state: data_in[OffsetsRam::CHARGE_STATE],
+        vb_ref: info.scale_voltage(&data_in[OffsetsRam::VB_REF]),
+        ahc_r_hi: data_in[OffsetsRam::AHC_R_HI],
+        ahc_r_lo: data_in[OffsetsRam::AHC_R_LO],
+        ahc_t_hi: data_in[OffsetsRam::AHC_T_HI],
+        ahc_t_lo: data_in[OffsetsRam::AHC_T_LO],
+        kwhc_r: data_in[OffsetsRam::KWHC_R],
+        kwhc_t: data_in[OffsetsRam::KWHC_T],
+        power_out_shadow: info.scale_power(&data_in[OffsetsRam::POWER_OUT_SHADOW]),
+        power_in_shadow: info.scale_power(&data_in[OffsetsRam::POWER_IN_SHADOW]),
+        sweep_pin_max: info.scale_power(&data_in[OffsetsRam::SWEEP_PIN_MAX]),
+        sweep_vmp: info.scale_voltage(&data_in[OffsetsRam::SWEEP_VMP]),
+        sweep_voc: info.scale_voltage(&data_in[OffsetsRam::SWEEP_VOC]),
+        vb_min_daily: info.scale_voltage(&data_in[OffsetsRam::VB_MIN_DAILY]),
+        vb_max_daily: info.scale_voltage(&data_in[OffsetsRam::VB_MAX_DAILY]),
+        va_max_daily: info.scale_voltage(&data_in[OffsetsRam::VA_MAX_DAILY]),
+        ahc_daily: data_in[OffsetsRam::AHC_DAILY] as f32 * 0.1,
+        whc_daily: data_in[OffsetsRam::WHC_DAILY],
+        flags_daily: data_in[OffsetsRam::FLAGS_DAILY],
+        pout_max_daily: info.scale_power(&data_in[OffsetsRam::POUT_MAX_DAILY]),
+        tb_min_daily: data_in[OffsetsRam::TB_MIN_DAILY],
+        tb_max_daily: data_in[OffsetsRam::TB_MAX_DAILY],
+        fault_daily: data_in[OffsetsRam::FAULT_DAILY],
+        alarm_daily_hi: data_in[OffsetsRam::ALARM_DAILY_HI],
+        alarm_daily_lo: data_in[OffsetsRam::ALARM_DAILY_LO],
+        time_ab_daily: data_in[OffsetsRam::TIME_AB_DAILY],
+        time_eq_daily: data_in[OffsetsRam::TIME_EQ_DAILY],
+        time_fl_daily: data_in[OffsetsRam::TIME_FL_DAILY],
+        ib_ref_slave: data_in[OffsetsRam::IB_REF_SLAVE] as f32 * 80. * f32::powf(2., -15.),
+        vb_ref_slave: info.scale_voltage(&data_in[OffsetsRam::VB_REF_SLAVE]),
+        va_ref_fixed: info.scale_voltage(&data_in[OffsetsRam::VA_REF_FIXED]),
+        va_ref_fixed_pct: data_in[OffsetsRam::VA_REF_FIXED_PCT] as f32 * 100. * f32::powf(2., -16.),
     };
     println!("ram: {:#?}", ram_data);
 
@@ -388,92 +388,92 @@ fn main() {
         .expect("could not get eeprom data");
 
     let eeprom_data = MpptEeprom {
-        EV_absorp: Voltage {
-            data: data_in[OffsetsEeprom::EV_absorp],
+        ev_absorp: Voltage {
+            data: data_in[OffsetsEeprom::EV_ABSORP],
         },
-        EV_float: Voltage {
-            data: data_in[OffsetsEeprom::EV_float],
+        ev_float: Voltage {
+            data: data_in[OffsetsEeprom::EV_FLOAT],
         },
-        Et_absorp: Raw {
-            data: data_in[OffsetsEeprom::Et_absorp],
+        et_absorp: Raw {
+            data: data_in[OffsetsEeprom::ET_ABSORP],
         },
-        Et_absorp_ext: Raw {
-            data: data_in[OffsetsEeprom::Et_absorp_ext],
+        et_absorp_ext: Raw {
+            data: data_in[OffsetsEeprom::ET_ABSORP_EXT],
         },
-        EV_absorp_ext: Voltage {
-            data: data_in[OffsetsEeprom::EV_absorp_ext],
+        ev_absorp_ext: Voltage {
+            data: data_in[OffsetsEeprom::EV_ABSORP_EXT],
         },
-        EV_float_cancel: Voltage {
-            data: data_in[OffsetsEeprom::EV_float_cancel],
+        ev_float_cancel: Voltage {
+            data: data_in[OffsetsEeprom::EV_FLOAT_CANCEL],
         },
-        Et_float_exit_cum: Raw {
-            data: data_in[OffsetsEeprom::Et_float_exit_cum],
+        et_float_exit_cum: Raw {
+            data: data_in[OffsetsEeprom::ET_FLOAT_EXIT_CUM],
         },
-        EV_eq: Voltage {
-            data: data_in[OffsetsEeprom::EV_eq],
+        ev_eq: Voltage {
+            data: data_in[OffsetsEeprom::EV_EQ],
         },
-        Et_eqcalendar: Raw {
-            data: data_in[OffsetsEeprom::Et_eqcalendar],
+        et_eqcalendar: Raw {
+            data: data_in[OffsetsEeprom::ET_EQCALENDAR],
         },
-        Et_eq_above: Raw {
-            data: data_in[OffsetsEeprom::Et_eq_above],
+        et_eq_above: Raw {
+            data: data_in[OffsetsEeprom::ET_EQ_ABOVE],
         },
-        Et_eq_reg: Raw {
-            data: data_in[OffsetsEeprom::Et_eq_reg],
+        et_eq_reg: Raw {
+            data: data_in[OffsetsEeprom::ET_EQ_REG],
         },
-        Et_batt_service: Raw {
-            data: data_in[OffsetsEeprom::Et_batt_service],
+        et_batt_service: Raw {
+            data: data_in[OffsetsEeprom::ET_BATT_SERVICE],
         },
-        EV_tempcomp: Tempcomp {
-            data: data_in[OffsetsEeprom::EV_tempcomp],
+        ev_tempcomp: Tempcomp {
+            data: data_in[OffsetsEeprom::EV_TEMPCOMP],
         },
-        EV_hvd: Voltage {
-            data: data_in[OffsetsEeprom::EV_hvd],
+        ev_hvd: Voltage {
+            data: data_in[OffsetsEeprom::EV_HVD],
         },
-        EV_hvr: Voltage {
-            data: data_in[OffsetsEeprom::EV_hvr],
+        ev_hvr: Voltage {
+            data: data_in[OffsetsEeprom::EV_HVR],
         },
-        Evb_ref_lim: Voltage {
-            data: data_in[OffsetsEeprom::Evb_ref_lim],
+        evb_ref_lim: Voltage {
+            data: data_in[OffsetsEeprom::EVB_REF_LIM],
         },
-        ETb_max: Raw {
-            data: data_in[OffsetsEeprom::ETb_max],
+        etb_max: Raw {
+            data: data_in[OffsetsEeprom::ETB_MAX],
         },
-        ETb_min: Raw {
-            data: data_in[OffsetsEeprom::ETb_min],
+        etb_min: Raw {
+            data: data_in[OffsetsEeprom::ETB_MIN],
         },
-        EV_soc_g_gy: Voltage {
-            data: data_in[OffsetsEeprom::EV_soc_g_gy],
+        ev_soc_g_gy: Voltage {
+            data: data_in[OffsetsEeprom::EV_SOC_G_GY],
         },
-        EV_soc_gy_y: Voltage {
-            data: data_in[OffsetsEeprom::EV_soc_gy_y],
+        ev_soc_gy_y: Voltage {
+            data: data_in[OffsetsEeprom::EV_SOC_GY_Y],
         },
-        EV_soc_y_yr: Voltage {
-            data: data_in[OffsetsEeprom::EV_soc_y_yr],
+        ev_soc_y_yr: Voltage {
+            data: data_in[OffsetsEeprom::EV_SOC_Y_YR],
         },
-        EV_soc_yr_r: Voltage {
-            data: data_in[OffsetsEeprom::EV_soc_yr_r],
+        ev_soc_yr_r: Voltage {
+            data: data_in[OffsetsEeprom::EV_SOC_YR_R],
         },
-        Emodbus_id: Raw {
-            data: data_in[OffsetsEeprom::Emodbus_id],
+        emodbus_id: Raw {
+            data: data_in[OffsetsEeprom::EMODBUS_ID],
         },
-        Emeterbus_id: Raw {
-            data: data_in[OffsetsEeprom::Emeterbus_id],
+        emeterbus_id: Raw {
+            data: data_in[OffsetsEeprom::EMETERBUS_ID],
         },
-        EIb_lim: Current {
-            data: data_in[OffsetsEeprom::EIb_lim],
+        eib_lim: Current {
+            data: data_in[OffsetsEeprom::EIB_LIM],
         },
-        EVa_ref_fixed_init: Voltage {
-            data: data_in[OffsetsEeprom::EVa_ref_fixed_init],
+        eva_ref_fixed_init: Voltage {
+            data: data_in[OffsetsEeprom::EVA_REF_FIXED_INIT],
         },
-        EVa_ref_fixed_pct_init: VoltagePercentage {
-            data: data_in[OffsetsEeprom::EVa_ref_fixed_pct_init],
+        eva_ref_fixed_pct_init: VoltagePercentage {
+            data: data_in[OffsetsEeprom::EVA_REF_FIXED_PCT_INIT],
         },
     };
 
     println!("eeprom: {:#?}", eeprom_data);
     let value = 50.;
-    let value_scaled = ((value / info.v_scale) / f32::powf(2., -15.)) as u16;
+    let _value_scaled = ((value / info.v_scale) / f32::powf(2., -15.)) as u16;
     // modbus
     //     .write_register(EEPROM_BEGIN as u16 + OffsetsEeprom::EV_soc_g_gy as u16, value_scaled)
     //     .expect("could not set value");

@@ -389,7 +389,6 @@ dependencies = [
  "clap 3.2.20",
  "libmodbus-rs",
  "serde",
- "sum_type",
 ]
 
 [[package]]
@@ -578,12 +577,6 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
-
-[[package]]
-name = "sum_type"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da5b4a0c9f3c7c8e891e445a7c776627e208e8bba23ab680798066dd283e6a15"
 
 [[package]]
 name = "syn"

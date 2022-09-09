@@ -3,7 +3,6 @@ use std::{path::Path, process::Command};
 use clap::{AppSettings, Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
 use serde::{Deserialize, Serialize};
-use sum_type::sum_type;
 
 mod offsets;
 use crate::offsets::{OffsetsEeprom, OffsetsRam};
@@ -88,56 +87,51 @@ struct MpptRam {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct MpptEeprom {
-    EV_absorp: UnitValues,
-    EV_float: UnitValues,
-    Et_absorp: UnitValues,
-    Et_absorp_ext: UnitValues,
-    EV_absorp_ext: UnitValues,
-    EV_float_cancel: UnitValues,
-    Et_float_exit_cum: UnitValues,
-    EV_eq: UnitValues,
-    Et_eqcalendar: UnitValues,
-    Et_eq_above: UnitValues,
-    Et_eq_reg: UnitValues,
-    Et_batt_service: UnitValues,
-    EV_tempcomp: UnitValues,
-    EV_hvd: UnitValues,
-    EV_hvr: UnitValues,
-    Evb_ref_lim: UnitValues,
-    ETb_max: UnitValues,
-    ETb_min: UnitValues,
-    EV_soc_g_gy: UnitValues,
-    EV_soc_gy_y: UnitValues,
-    EV_soc_y_yr: UnitValues,
-    EV_soc_yr_r: UnitValues,
-    Emodbus_id: UnitValues,
-    Emeterbus_id: UnitValues,
-    EIb_lim: UnitValues,
-    EVa_ref_fixed_init: UnitValues,
-    EVa_ref_fixed_pct_init: UnitValues,
+    EV_absorp: Voltage,
+    EV_float: Voltage,
+    Et_absorp: Raw,
+    Et_absorp_ext: Raw,
+    EV_absorp_ext: Voltage,
+    EV_float_cancel: Voltage,
+    Et_float_exit_cum: Raw,
+    EV_eq: Voltage,
+    Et_eqcalendar: Raw,
+    Et_eq_above: Raw,
+    Et_eq_reg: Raw,
+    Et_batt_service: Raw,
+    EV_tempcomp: Tempcomp,
+    EV_hvd: Voltage,
+    EV_hvr: Voltage,
+    Evb_ref_lim: Voltage,
+    ETb_max: Raw,
+    ETb_min: Raw,
+    EV_soc_g_gy: Voltage,
+    EV_soc_gy_y: Voltage,
+    EV_soc_y_yr: Voltage,
+    EV_soc_yr_r: Voltage,
+    Emodbus_id: Raw,
+    Emeterbus_id: Raw,
+    EIb_lim: Current,
+    EVa_ref_fixed_init: Voltage,
+    EVa_ref_fixed_pct_init: VoltagePercentage,
 }
 
-sum_type! {
-    #[derive(Serialize, Deserialize, Debug)]
-    enum UnitValues {
-        Raw(u16),
-        ScaledCurrent(ScaledCurrent),
-        ScaledVoltage(ScaledVoltage),
-        ScaledVoltagePercentage(ScaledVoltagePercentage),
-        ScaledTempcomp(ScaledTempcomp),
-    }
+trait Scaled {
+    fn get_scaled(&self, info: &Info) -> f32;
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ScaledTempcomp {
+struct Tempcomp {
     data: u16,
 }
 
-impl ScaledTempcomp {
-    pub fn get(&self, info: &Info) -> f32 {
+impl Scaled for Tempcomp {
+    fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * info.v_scale * f32::powf(2., -16.)
     }
+}
 
+impl Tempcomp {
     pub fn new(voltage: f32, info: &Info) -> Self {
         Self {
             data: ((voltage / f32::powf(2., -16.)) / info.v_scale) as u16,
@@ -146,16 +140,18 @@ impl ScaledTempcomp {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ScaledVoltage {
+struct Voltage {
     data: u16,
 }
 
-impl ScaledVoltage {
-    pub fn get(&self, info: &Info) -> f32 {
+impl Scaled for Voltage {
+    fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * info.v_scale * f32::powf(2., -15.)
     }
+}
 
-    pub fn new(voltage: f32, info: &Info) -> Self {
+impl Voltage {
+    fn new(voltage: f32, info: &Info) -> Self {
         Self {
             data: ((voltage / f32::powf(2., -15.)) / info.v_scale) as u16,
         }
@@ -163,16 +159,18 @@ impl ScaledVoltage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ScaledVoltagePercentage {
+struct VoltagePercentage {
     data: u16,
 }
 
-impl ScaledVoltagePercentage {
-    pub fn get(&self, info: &Info) -> f32 {
+impl Scaled for VoltagePercentage {
+    fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * 100. * f32::powf(2., -16.)
     }
+}
 
-    pub fn new(voltage: f32, info: &Info) -> Self {
+impl VoltagePercentage {
+    fn new(voltage: f32, info: &Info) -> Self {
         Self {
             data: ((voltage / f32::powf(2., -16.)) / 100.) as u16,
         }
@@ -180,19 +178,38 @@ impl ScaledVoltagePercentage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ScaledCurrent {
+struct Current {
     data: u16,
 }
 
-impl ScaledCurrent {
-    pub fn get(&self, info: &Info) -> f32 {
+impl Scaled for Current {
+    fn get_scaled(&self, info: &Info) -> f32 {
         self.data as f32 * info.i_scale * f32::powf(2., -15.)
     }
+}
 
-    pub fn new(voltage: f32, info: &Info) -> Self {
+impl Current {
+    fn new(current: f32, info: &Info) -> Self {
         Self {
-            data: ((voltage / f32::powf(2., -15.)) / info.i_scale) as u16,
+            data: ((current / f32::powf(2., -15.)) / info.i_scale) as u16,
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Raw {
+    data: u16,
+}
+
+impl Scaled for Raw {
+    fn get_scaled(&self, info: &Info) -> f32 {
+        self.data as f32
+    }
+}
+
+impl Raw {
+    fn new(input: u16, info: &Info) -> Self {
+        Self { data: input }
     }
 }
 
@@ -380,65 +397,87 @@ fn main() {
         .expect("could not get eeprom data");
 
     let eeprom_data = MpptEeprom {
-        EV_absorp: UnitValues::ScaledVoltage(ScaledVoltage {
+        EV_absorp: Voltage {
             data: data_in[OffsetsEeprom::EV_absorp],
-        }),
-        EV_float: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EV_float: Voltage {
             data: data_in[OffsetsEeprom::EV_float],
-        }),
-        Et_absorp: UnitValues::Raw(data_in[OffsetsEeprom::Et_absorp]),
-        Et_absorp_ext: UnitValues::Raw(data_in[OffsetsEeprom::Et_absorp_ext]),
-        EV_absorp_ext: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        Et_absorp: Raw {
+            data: data_in[OffsetsEeprom::Et_absorp],
+        },
+        Et_absorp_ext: Raw {
+            data: data_in[OffsetsEeprom::Et_absorp_ext],
+        },
+        EV_absorp_ext: Voltage {
             data: data_in[OffsetsEeprom::EV_absorp_ext],
-        }),
-        EV_float_cancel: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EV_float_cancel: Voltage {
             data: data_in[OffsetsEeprom::EV_float_cancel],
-        }),
-        Et_float_exit_cum: UnitValues::Raw(data_in[OffsetsEeprom::Et_float_exit_cum]),
-        EV_eq: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        Et_float_exit_cum: Raw {
+            data: data_in[OffsetsEeprom::Et_float_exit_cum],
+        },
+        EV_eq: Voltage {
             data: data_in[OffsetsEeprom::EV_eq],
-        }),
-        Et_eqcalendar: UnitValues::Raw(data_in[OffsetsEeprom::Et_eqcalendar]),
-        Et_eq_above: UnitValues::Raw(data_in[OffsetsEeprom::Et_eq_above]),
-        Et_eq_reg: UnitValues::Raw(data_in[OffsetsEeprom::Et_eq_reg]),
-        Et_batt_service: UnitValues::Raw(data_in[OffsetsEeprom::Et_batt_service]),
-        EV_tempcomp: UnitValues::ScaledTempcomp(ScaledTempcomp {
+        },
+        Et_eqcalendar: Raw {
+            data: data_in[OffsetsEeprom::Et_eqcalendar],
+        },
+        Et_eq_above: Raw {
+            data: data_in[OffsetsEeprom::Et_eq_above],
+        },
+        Et_eq_reg: Raw {
+            data: data_in[OffsetsEeprom::Et_eq_reg],
+        },
+        Et_batt_service: Raw {
+            data: data_in[OffsetsEeprom::Et_batt_service],
+        },
+        EV_tempcomp: Tempcomp {
             data: data_in[OffsetsEeprom::EV_tempcomp],
-        }),
-        EV_hvd: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EV_hvd: Voltage {
             data: data_in[OffsetsEeprom::EV_hvd],
-        }),
-        EV_hvr: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EV_hvr: Voltage {
             data: data_in[OffsetsEeprom::EV_hvr],
-        }),
-        Evb_ref_lim: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        Evb_ref_lim: Voltage {
             data: data_in[OffsetsEeprom::Evb_ref_lim],
-        }),
-        ETb_max: UnitValues::Raw(data_in[OffsetsEeprom::ETb_max]),
-        ETb_min: UnitValues::Raw(data_in[OffsetsEeprom::ETb_min]),
-        EV_soc_g_gy: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        ETb_max: Raw {
+            data: data_in[OffsetsEeprom::ETb_max],
+        },
+        ETb_min: Raw {
+            data: data_in[OffsetsEeprom::ETb_min],
+        },
+        EV_soc_g_gy: Voltage {
             data: data_in[OffsetsEeprom::EV_soc_g_gy],
-        }),
-        EV_soc_gy_y: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EV_soc_gy_y: Voltage {
             data: data_in[OffsetsEeprom::EV_soc_gy_y],
-        }),
-        EV_soc_y_yr: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EV_soc_y_yr: Voltage {
             data: data_in[OffsetsEeprom::EV_soc_y_yr],
-        }),
-        EV_soc_yr_r: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EV_soc_yr_r: Voltage {
             data: data_in[OffsetsEeprom::EV_soc_yr_r],
-        }),
-        Emodbus_id: UnitValues::Raw(data_in[OffsetsEeprom::Emodbus_id]),
-        Emeterbus_id: UnitValues::Raw(data_in[OffsetsEeprom::Emeterbus_id]),
-        EIb_lim: UnitValues::ScaledCurrent(ScaledCurrent {
+        },
+        Emodbus_id: Raw {
+            data: data_in[OffsetsEeprom::Emodbus_id],
+        },
+        Emeterbus_id: Raw {
+            data: data_in[OffsetsEeprom::Emeterbus_id],
+        },
+        EIb_lim: Current {
             data: data_in[OffsetsEeprom::EIb_lim],
-        }),
-        EVa_ref_fixed_init: UnitValues::ScaledVoltage(ScaledVoltage {
+        },
+        EVa_ref_fixed_init: Voltage {
             data: data_in[OffsetsEeprom::EVa_ref_fixed_init],
-        }),
-        EVa_ref_fixed_pct_init: UnitValues::ScaledVoltagePercentage(ScaledVoltagePercentage {
+        },
+        EVa_ref_fixed_pct_init: VoltagePercentage {
             data: data_in[OffsetsEeprom::EVa_ref_fixed_pct_init],
-        }),
+        },
     };
 
     println!("eeprom: {:#?}", eeprom_data);

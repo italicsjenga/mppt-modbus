@@ -1,8 +1,11 @@
-use std::{any::TypeId, path::Path, process::Command};
+#![allow(incomplete_features)]
+#![feature(adt_const_params)]
+#![feature(generic_arg_infer)]
+
+use std::{path::Path, process::Command};
 
 use clap::{AppSettings, Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
-use serde::{Deserialize, Serialize};
 
 mod offsets;
 use crate::offsets::{OffsetsEeprom, OffsetsRam};
@@ -13,7 +16,7 @@ const EEPROM_BEGIN: u16 = 0xE000;
 const EEPROM_DATA_SIZE: u16 = 0x0021;
 // const EEPROM_DATA_SIZE: u16 = 0xE0CD - EEPROM_BEGIN;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 struct MpptRam {
     // scaling values
     v_pu: f32,
@@ -85,197 +88,113 @@ struct MpptRam {
     va_ref_fixed_pct: f32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 struct MpptEeprom {
-    ev_absorp: Datapoint<Voltage>,
-    ev_float: Datapoint<Voltage>,
-    et_absorp: Datapoint<Raw>,
-    et_absorp_ext: Datapoint<Raw>,
-    ev_absorp_ext: Datapoint<Voltage>,
-    ev_float_cancel: Datapoint<Voltage>,
-    et_float_exit_cum: Datapoint<Raw>,
-    ev_eq: Datapoint<Voltage>,
-    et_eqcalendar: Datapoint<Raw>,
-    et_eq_above: Datapoint<Raw>,
-    et_eq_reg: Datapoint<Raw>,
-    et_batt_service: Datapoint<Raw>,
-    ev_tempcomp: Datapoint<Tempcomp>,
-    ev_hvd: Datapoint<Voltage>,
-    ev_hvr: Datapoint<Voltage>,
-    evb_ref_lim: Datapoint<Voltage>,
-    etb_max: Datapoint<Raw>,
-    etb_min: Datapoint<Raw>,
-    ev_soc_g_gy: Datapoint<Voltage>,
-    ev_soc_gy_y: Datapoint<Voltage>,
-    ev_soc_y_yr: Datapoint<Voltage>,
-    ev_soc_yr_r: Datapoint<Voltage>,
-    emodbus_id: Datapoint<Raw>,
-    emeterbus_id: Datapoint<Raw>,
-    eib_lim: Datapoint<Current>,
-    eva_ref_fixed_init: Datapoint<Voltage>,
-    eva_ref_fixed_pct_init: Datapoint<VoltagePercentage>,
+    ev_absorp: Datapoint<{ Datatype::Voltage }>,
+    ev_float: Datapoint<{ Datatype::Voltage }>,
+    et_absorp: Datapoint<{ Datatype::Raw }>,
+    et_absorp_ext: Datapoint<{ Datatype::Raw }>,
+    ev_absorp_ext: Datapoint<{ Datatype::Voltage }>,
+    ev_float_cancel: Datapoint<{ Datatype::Voltage }>,
+    et_float_exit_cum: Datapoint<{ Datatype::Raw }>,
+    ev_eq: Datapoint<{ Datatype::Voltage }>,
+    et_eqcalendar: Datapoint<{ Datatype::Raw }>,
+    et_eq_above: Datapoint<{ Datatype::Raw }>,
+    et_eq_reg: Datapoint<{ Datatype::Raw }>,
+    et_batt_service: Datapoint<{ Datatype::Raw }>,
+    ev_tempcomp: Datapoint<{ Datatype::Tempcomp }>,
+    ev_hvd: Datapoint<{ Datatype::Voltage }>,
+    ev_hvr: Datapoint<{ Datatype::Voltage }>,
+    evb_ref_lim: Datapoint<{ Datatype::Voltage }>,
+    etb_max: Datapoint<{ Datatype::Raw }>,
+    etb_min: Datapoint<{ Datatype::Raw }>,
+    ev_soc_g_gy: Datapoint<{ Datatype::Voltage }>,
+    ev_soc_gy_y: Datapoint<{ Datatype::Voltage }>,
+    ev_soc_y_yr: Datapoint<{ Datatype::Voltage }>,
+    ev_soc_yr_r: Datapoint<{ Datatype::Voltage }>,
+    emodbus_id: Datapoint<{ Datatype::Raw }>,
+    emeterbus_id: Datapoint<{ Datatype::Raw }>,
+    eib_lim: Datapoint<{ Datatype::Current }>,
+    eva_ref_fixed_init: Datapoint<{ Datatype::Voltage }>,
+    eva_ref_fixed_pct_init: Datapoint<{ Datatype::VoltagePercentage }>,
+}
+// struct MpptEeprom {
+//     ev_absorp: Datatype::Voltage,
+//     ev_float: Datatype::Voltage,
+//     et_absorp: Datatype::Raw,
+//     et_absorp_ext: Datatype::Raw,
+//     ev_absorp_ext: Datatype::Voltage,
+//     ev_float_cancel: Datatype::Voltage,
+//     et_float_exit_cum: Datatype::Raw,
+//     ev_eq: Datatype::Voltage,
+//     et_eqcalendar: Datatype::Raw,
+//     et_eq_above: Datatype::Raw,
+//     et_eq_reg: Datatype::Raw,
+//     et_batt_service: Datatype::Raw,
+//     ev_tempcomp: Datatype::Tempcomp,
+//     ev_hvd: Datatype::Voltage,
+//     ev_hvr: Datatype::Voltage,
+//     evb_ref_lim: Datatype::Voltage,
+//     etb_max: Datatype::Raw,
+//     etb_min: Datatype::Raw,
+//     ev_soc_g_gy: Datatype::Voltage,
+//     ev_soc_gy_y: Datatype::Voltage,
+//     ev_soc_y_yr: Datatype::Voltage,
+//     ev_soc_yr_r: Datatype::Voltage,
+//     emodbus_id: Datatype::Raw,
+//     emeterbus_id: Datatype::Raw,
+//     eib_lim: Datatype::Current,
+//     eva_ref_fixed_init: Datatype::Voltage,
+//     eva_ref_fixed_pct_init: Datatype::VoltagePercentage,
+// }
+
+#[derive(Debug, PartialEq, Eq)]
+enum Datatype {
+    Voltage,
+    VoltagePercentage,
+    Tempcomp,
+    Current,
+    Raw,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Datapoint<T: Scaled + ?Sized> {
-    inner: Box<T>,
+#[derive(Debug)]
+struct Datapoint<const t: Datatype> {
+    data: u16,
 }
 
 // #[derive(Serialize, Deserialize, Debug)]
-// struct Datapoint<T: Scaled + ?Sized> {
-//     inner: Box<T>,
+// struct Datapoint {
+//     datatype: Datatype,
+//     data: u16,
 // }
 
-impl<T: Scaled> Scaled for Datapoint<T> {
+impl<const t: Datatype> Datapoint<t> {
+    fn get_type(&self) -> Datatype {
+        t
+    }
+
     fn get_scaled(&self, info: &Info) -> f32 {
-        self.inner.get_scaled(info)
-    }
-
-    fn new(input: f32, info: &Info) -> Self {
-        Datapoint {
-            inner: Box::new(T::new(input, info)),
+        match t {
+            Datatype::Voltage => self.data as f32 * info.v_scale * f32::powf(2., -15.),
+            Datatype::VoltagePercentage => self.data as f32 * 100. * f32::powf(2., -16.),
+            Datatype::Tempcomp => self.data as f32 * info.v_scale * f32::powf(2., -16.),
+            Datatype::Current => self.data as f32 * info.i_scale * f32::powf(2., -15.),
+            Datatype::Raw => self.data as f32,
         }
     }
 
-    fn from_u16(input: u16) -> Self {
-        Datapoint {
-            inner: Box::new(T::from_u16(input)),
-        }
-    }
-}
-
-impl<T: Scaled + 'static> Datapoint<T> {
-    fn from_input(input: &str, info: &Info) -> Self {
-        if TypeId::of::<T>() == TypeId::of::<Raw>() {
-            let a: u16 = input.parse().unwrap();
-            Datapoint {
-                inner: Box::new(T::from_u16(a)),
-            }
-        } else {
-            let a: f32 = input.parse().unwrap();
-            Datapoint {
-                inner: Box::new(T::new(a, info)),
-            }
-        }
-    }
-}
-
-trait Scaled {
-    fn get_scaled(&self, info: &Info) -> f32;
-    fn new(input: f32, info: &Info) -> Self
-    where
-        Self: Sized;
-    fn from_u16(input: u16) -> Self
-    where
-        Self: Sized;
-    fn new_same(&self, input: f32, info: &Info) -> Self
-    where
-        Self: Sized,
-    {
-        Self::new(input, info)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-struct Tempcomp {
-    data: u16,
-}
-
-impl Scaled for Tempcomp {
-    fn get_scaled(&self, info: &Info) -> f32 {
-        self.data as f32 * info.v_scale * f32::powf(2., -16.)
-    }
-
-    fn new(input: f32, info: &Info) -> Self {
-        Self {
-            data: ((input / f32::powf(2., -16.)) / info.v_scale) as u16,
+    fn get_val(dt: Datatype, input: f32, info: &Info) -> u16 {
+        match dt {
+            Datatype::Voltage => ((input / f32::powf(2., -15.)) / info.v_scale) as u16,
+            Datatype::VoltagePercentage => ((input / f32::powf(2., -16.)) / 100.) as u16,
+            Datatype::Tempcomp => ((input / f32::powf(2., -16.)) / info.v_scale) as u16,
+            Datatype::Current => ((input / f32::powf(2., -15.)) / info.i_scale) as u16,
+            Datatype::Raw => input as u16,
         }
     }
 
-    fn from_u16(input: u16) -> Self {
-        Self { data: input }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-struct Voltage {
-    data: u16,
-}
-
-impl Scaled for Voltage {
-    fn get_scaled(&self, info: &Info) -> f32 {
-        self.data as f32 * info.v_scale * f32::powf(2., -15.)
-    }
-
-    fn new(input: f32, info: &Info) -> Self {
-        Self {
-            data: ((input / f32::powf(2., -15.)) / info.v_scale) as u16,
-        }
-    }
-
-    fn from_u16(input: u16) -> Self {
-        Self { data: input }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-struct VoltagePercentage {
-    data: u16,
-}
-
-impl Scaled for VoltagePercentage {
-    fn get_scaled(&self, _: &Info) -> f32 {
-        self.data as f32 * 100. * f32::powf(2., -16.)
-    }
-
-    fn new(input: f32, _: &Info) -> Self {
-        Self {
-            data: ((input / f32::powf(2., -16.)) / 100.) as u16,
-        }
-    }
-
-    fn from_u16(input: u16) -> Self {
-        Self { data: input }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-struct Current {
-    data: u16,
-}
-
-impl Scaled for Current {
-    fn get_scaled(&self, info: &Info) -> f32 {
-        self.data as f32 * info.i_scale * f32::powf(2., -15.)
-    }
-
-    fn new(input: f32, info: &Info) -> Self {
-        Self {
-            data: ((input / f32::powf(2., -15.)) / info.i_scale) as u16,
-        }
-    }
-
-    fn from_u16(input: u16) -> Self {
-        Self { data: input }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-struct Raw {
-    data: u16,
-}
-
-impl Scaled for Raw {
-    fn get_scaled(&self, _: &Info) -> f32 {
-        self.data as f32
-    }
-
-    fn new(input: f32, _: &Info) -> Self {
-        Self { data: input as u16 }
-    }
-
-    fn from_u16(input: u16) -> Self {
-        Self { data: input }
+    fn from_u16(d: u16) -> Self {
+        Self { data: d }
     }
 }
 
@@ -564,8 +483,8 @@ fn main() {
     //     .expect("could not set value");
 }
 
-fn match_datapoint(name: &str, data: &MpptEeprom) -> Datapoint<dyn Scaled> {
-    let a = data.ev_absorp;
+fn match_datapoint<const t: Datatype>(name: &str, data: &MpptEeprom) -> Datapoint<{ Datatype }> {
+    // let a = data.ev_absorp;
     match name.to_lowercase().as_str() {
         "ev_absorp" => data.ev_absorp,
         "ev_float" => data.ev_float,
@@ -594,6 +513,40 @@ fn match_datapoint(name: &str, data: &MpptEeprom) -> Datapoint<dyn Scaled> {
         "eib_lim" => data.eib_lim,
         "eva_ref_fixed_init" => data.eva_ref_fixed_init,
         "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init,
+        &_ => todo!(),
+    }
+}
+
+fn match_datapoint_type(name: &str, data: &MpptEeprom) -> Datatype {
+    // let a = data.ev_absorp;
+    match name.to_lowercase().as_str() {
+        "ev_absorp" => data.ev_absorp.get_type(),
+        "ev_float" => data.ev_float.get_type(),
+        "et_absorp" => data.et_absorp.get_type(),
+        "et_absorp_ext" => data.et_absorp_ext.get_type(),
+        "ev_absorp_ext" => data.ev_absorp_ext.get_type(),
+        "ev_float_cancel" => data.ev_float_cancel.get_type(),
+        "et_float_exit_cum" => data.et_float_exit_cum.get_type(),
+        "ev_eq" => data.ev_eq.get_type(),
+        "et_eqcalendar" => data.et_eqcalendar.get_type(),
+        "et_eq_above" => data.et_eq_above.get_type(),
+        "et_eq_reg" => data.et_eq_reg.get_type(),
+        "et_batt_service" => data.et_batt_service.get_type(),
+        "ev_tempcomp" => data.ev_tempcomp.get_type(),
+        "ev_hvd" => data.ev_hvd.get_type(),
+        "ev_hvr" => data.ev_hvr.get_type(),
+        "evb_ref_lim" => data.evb_ref_lim.get_type(),
+        "etb_max" => data.etb_max.get_type(),
+        "etb_min" => data.etb_min.get_type(),
+        "ev_soc_g_gy" => data.ev_soc_g_gy.get_type(),
+        "ev_soc_gy_y" => data.ev_soc_gy_y.get_type(),
+        "ev_soc_y_yr" => data.ev_soc_y_yr.get_type(),
+        "ev_soc_yr_r" => data.ev_soc_yr_r.get_type(),
+        "emodbus_id" => data.emodbus_id.get_type(),
+        "emeterbus_id" => data.emeterbus_id.get_type(),
+        "eib_lim" => data.eib_lim.get_type(),
+        "eva_ref_fixed_init" => data.eva_ref_fixed_init.get_type(),
+        "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init.get_type(),
         &_ => todo!(),
     }
 }

@@ -177,6 +177,10 @@ struct Args {
     #[clap(long)]
     get_serial_ports: bool,
 
+    /// Use fake data - for testing
+    #[clap(long)]
+    fake: bool,
+
     #[clap(subcommand)]
     command: Option<Commands>,
 }
@@ -187,7 +191,10 @@ enum Commands {
     Get { name: String },
 
     /// Set single EEPROM value
-    Set { name: String },
+    Set { name: String, value: f32 },
+
+    /// Get all RAM values
+    GetRam,
 }
 
 struct Info {
@@ -234,59 +241,120 @@ fn main() {
         println!("{}", s);
         return;
     }
-    let baud = 9600;
-    let parity = 'N';
-    let data_bit = 8;
-    let stop_bit = 2;
 
-    if !Path::new(&args.serial_port).exists() {
+    if !Path::new(&args.serial_port).exists() && !args.fake {
         println!(
             "Serial port {} does not exist\nTry \"mppt-control --help\" for usage instructions",
             args.serial_port
         );
-        // return;
+        return;
     }
 
-    let eeprom_data = MpptEeprom {
-        ev_absorp: Datapoint::from_u16(0x0000),
-        ev_float: Datapoint::from_u16(0x0000),
-        et_absorp: Datapoint::from_u16(0x0000),
-        et_absorp_ext: Datapoint::from_u16(0x0000),
-        ev_absorp_ext: Datapoint::from_u16(0x0000),
-        ev_float_cancel: Datapoint::from_u16(0x0000),
-        et_float_exit_cum: Datapoint::from_u16(0x0000),
-        ev_eq: Datapoint::from_u16(0x0000),
-        et_eqcalendar: Datapoint::from_u16(0x0000),
-        et_eq_above: Datapoint::from_u16(0x0000),
-        et_eq_reg: Datapoint::from_u16(0x0000),
-        et_batt_service: Datapoint::from_u16(0x0000),
-        ev_tempcomp: Datapoint::from_u16(0x0000),
-        ev_hvd: Datapoint::from_u16(0x0000),
-        ev_hvr: Datapoint::from_u16(0x0000),
-        evb_ref_lim: Datapoint::from_u16(0x0000),
-        etb_max: Datapoint::from_u16(0x0000),
-        etb_min: Datapoint::from_u16(0x0000),
-        ev_soc_g_gy: Datapoint::from_u16(0x0000),
-        ev_soc_gy_y: Datapoint::from_u16(0x0000),
-        ev_soc_y_yr: Datapoint::from_u16(0x0000),
-        ev_soc_yr_r: Datapoint::from_u16(0x0000),
-        emodbus_id: Datapoint::from_u16(0x0000),
-        emeterbus_id: Datapoint::from_u16(0x0000),
-        eib_lim: Datapoint::from_u16(0x0000),
-        eva_ref_fixed_init: Datapoint::from_u16(0x0000),
-        eva_ref_fixed_pct_init: Datapoint::from_u16(0x0000),
+    let (_info, ram_data, eeprom_data) = if !args.fake {
+        println!("Connecting to device on {}", args.serial_port);
+        let modbus = connect_modbus(&args.serial_port);
+        get_data(&modbus)
+    } else {
+        let info = Info {
+            v_scale: 1.,
+            i_scale: 1.,
+        };
+        let ram_data = MpptRam {
+            v_pu: 0.,
+            i_pu: 0.,
+            ver_sw: 0,
+            adc_vb_f_med: 0.,
+            adc_vbterm_f: 0.,
+            adc_vbs_f: 0.,
+            adc_va_f: 0.,
+            adc_ib_f_shadow: 0.,
+            adc_ia_f_shadow: 0.,
+            adc_p12_f: 0.,
+            adc_p3_f: 0.,
+            adc_pmeter_f: 0.,
+            adc_p18_f: 0.,
+            adc_v_ref: 0.,
+            t_hs: 0,
+            t_rts: 0,
+            t_batt: 0,
+            adc_vb_f_1m: 0.,
+            adc_ib_f_1m: 0.,
+            vb_min: 0.,
+            vb_max: 0.,
+            hourmeter_hi: 0,
+            hourmeter_lo: 0,
+            fault_all: 0,
+            alarm_hi: 0,
+            alarm_lo: 0,
+            dip_all: 0,
+            led_state: 0,
+            charge_state: 0,
+            vb_ref: 0.,
+            ahc_r_hi: 0,
+            ahc_r_lo: 0,
+            ahc_t_hi: 0,
+            ahc_t_lo: 0,
+            kwhc_r: 0,
+            kwhc_t: 0,
+            power_out_shadow: 0.,
+            power_in_shadow: 0.,
+            sweep_pin_max: 0.,
+            sweep_vmp: 0.,
+            sweep_voc: 0.,
+            vb_min_daily: 0.,
+            vb_max_daily: 0.,
+            va_max_daily: 0.,
+            ahc_daily: 0.,
+            whc_daily: 0,
+            flags_daily: 0,
+            pout_max_daily: 0.,
+            tb_min_daily: 0,
+            tb_max_daily: 0,
+            fault_daily: 0,
+            alarm_daily_hi: 0,
+            alarm_daily_lo: 0,
+            time_ab_daily: 0,
+            time_eq_daily: 0,
+            time_fl_daily: 0,
+            ib_ref_slave: 0.,
+            vb_ref_slave: 0.,
+            va_ref_fixed: 0.,
+            va_ref_fixed_pct: 0.,
+        };
+        let eeprom_data = MpptEeprom {
+            ev_absorp: Datapoint::from_u16(0x0000),
+            ev_float: Datapoint::from_u16(0x0000),
+            et_absorp: Datapoint::from_u16(0x0000),
+            et_absorp_ext: Datapoint::from_u16(0x0000),
+            ev_absorp_ext: Datapoint::from_u16(0x0000),
+            ev_float_cancel: Datapoint::from_u16(0x0000),
+            et_float_exit_cum: Datapoint::from_u16(0x0000),
+            ev_eq: Datapoint::from_u16(0x0000),
+            et_eqcalendar: Datapoint::from_u16(0x0000),
+            et_eq_above: Datapoint::from_u16(0x0000),
+            et_eq_reg: Datapoint::from_u16(0x0000),
+            et_batt_service: Datapoint::from_u16(0x0000),
+            ev_tempcomp: Datapoint::from_u16(0x0000),
+            ev_hvd: Datapoint::from_u16(0x0000),
+            ev_hvr: Datapoint::from_u16(0x0000),
+            evb_ref_lim: Datapoint::from_u16(0x0000),
+            etb_max: Datapoint::from_u16(0x0000),
+            etb_min: Datapoint::from_u16(0x0000),
+            ev_soc_g_gy: Datapoint::from_u16(0x0000),
+            ev_soc_gy_y: Datapoint::from_u16(0x0000),
+            ev_soc_y_yr: Datapoint::from_u16(0x0000),
+            ev_soc_yr_r: Datapoint::from_u16(0x0000),
+            emodbus_id: Datapoint::from_u16(0x0000),
+            emeterbus_id: Datapoint::from_u16(0x0000),
+            eib_lim: Datapoint::from_u16(0x0000),
+            eva_ref_fixed_init: Datapoint::from_u16(0x0000),
+            eva_ref_fixed_pct_init: Datapoint::from_u16(0x0000),
+        };
+        (info, ram_data, eeprom_data)
     };
 
     match args.command {
         Some(Commands::Get { name }) => {
-            // println!(
-            //     "{}: {:#?}",
-            //     name.to_lowercase(),
-            //     match_datapoint(name.as_str(), &eeprom_data).get_scaled(&Info {
-            //         v_scale: 1.,
-            //         i_scale: 1.
-            //     })
-            // );
             let t = match_datapoint_type(
                 name.as_str(),
                 &eeprom_data,
@@ -298,7 +366,7 @@ fn main() {
             println!("{}: {} - {:?}", name, t.val, t.dt);
             return;
         }
-        Some(Commands::Set { name }) => {
+        Some(Commands::Set { name, value: _ }) => {
             println!("set var {}", name);
             let t = match_datapoint_type(
                 name.as_str(),
@@ -309,17 +377,23 @@ fn main() {
                 },
             );
             println!("type: {:?}", t);
-            // let new: Datapoint<{ t }> = Datapoint::from_u16(0x0000);
-            // let b: Datapoint<_> = Datapoint::<{ t }>::from_u16(0x0000);
             return;
         }
+        Some(Commands::GetRam) => {
+            println!("ram: {:#?}", ram_data);
+        }
         None => {
-            // println!("ram: {:#?}", ram_data);
             println!("eeprom: {:#?}", eeprom_data);
         }
     }
-    println!("Connecting to device on {}", args.serial_port);
-    let mut modbus = Modbus::new_rtu(&args.serial_port, baud, parity, data_bit, stop_bit)
+}
+
+fn connect_modbus(serial_port: &str) -> Modbus {
+    let baud = 9600;
+    let parity = 'N';
+    let data_bit = 8;
+    let stop_bit = 2;
+    let mut modbus = Modbus::new_rtu(serial_port, baud, parity, data_bit, stop_bit)
         .expect("Could not create modbus device");
     modbus
         .set_slave(DEVICE_ID)
@@ -327,6 +401,10 @@ fn main() {
     modbus
         .connect()
         .expect("Could not connect to client device");
+    return modbus;
+}
+
+fn get_data(modbus: &Modbus) -> (Info, MpptRam, MpptEeprom) {
     let mut data_in: [u16; RAM_DATA_SIZE as usize + 1] = [0; RAM_DATA_SIZE as usize + 1];
     modbus
         .read_registers(0x0000, RAM_DATA_SIZE + 1, &mut data_in)
@@ -436,30 +514,7 @@ fn main() {
         eva_ref_fixed_pct_init: Datapoint::from_u16(data_in[OffsetsEeprom::EVA_REF_FIXED_PCT_INIT]),
     };
 
-    match args.command {
-        Some(Commands::Get { name }) => {
-            println!("get var {}", name);
-            // println!(
-            //     "pp: {:#?}",
-            //     match_datapoint(name.as_str(), &eeprom_data).get_scaled(&info)
-            // );
-            return;
-        }
-        Some(Commands::Set { name }) => {
-            println!("set var {}", name);
-            return;
-        }
-        None => {
-            println!("ram: {:#?}", ram_data);
-            println!("eeprom: {:#?}", eeprom_data);
-        }
-    }
-
-    let value = 50.;
-    let _value_scaled = ((value / info.v_scale) / f32::powf(2., -15.)) as u16;
-    // modbus
-    //     .write_register(EEPROM_BEGIN as u16 + OffsetsEeprom::EV_soc_g_gy as u16, value_scaled)
-    //     .expect("could not set value");
+    return (info, ram_data, eeprom_data);
 }
 
 // fn match_datapoint(name: &str, data: &MpptEeprom) -> Datapoint<{ t }> {

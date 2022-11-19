@@ -4,7 +4,12 @@
 #![feature(generic_arg_infer)]
 #![feature(generic_const_exprs)]
 
-use std::{path::Path, process::Command};
+use std::{
+    fmt::{self, Debug, Display},
+    path::Path,
+    process::Command,
+    sync::Mutex,
+};
 
 use clap::{AppSettings, Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
@@ -17,6 +22,11 @@ const RAM_DATA_SIZE: u16 = 0x005B;
 const EEPROM_BEGIN: u16 = 0xE000;
 const EEPROM_DATA_SIZE: u16 = 0x0021;
 // const EEPROM_DATA_SIZE: u16 = 0xE0CD - EEPROM_BEGIN;
+
+static INFO_SCALE: Mutex<Info> = Mutex::new(Info {
+    v_scale: 1.,
+    i_scale: 1.,
+});
 
 #[derive(Debug)]
 struct MpptRam {
@@ -92,84 +102,291 @@ struct MpptRam {
 
 #[derive(Debug)]
 struct MpptEeprom {
-    ev_absorp: Datapoint<{ Datatype::Voltage }>,
-    ev_float: Datapoint<{ Datatype::Voltage }>,
-    et_absorp: Datapoint<{ Datatype::Raw }>,
-    et_absorp_ext: Datapoint<{ Datatype::Raw }>,
-    ev_absorp_ext: Datapoint<{ Datatype::Voltage }>,
-    ev_float_cancel: Datapoint<{ Datatype::Voltage }>,
-    et_float_exit_cum: Datapoint<{ Datatype::Raw }>,
-    ev_eq: Datapoint<{ Datatype::Voltage }>,
-    et_eqcalendar: Datapoint<{ Datatype::Raw }>,
-    et_eq_above: Datapoint<{ Datatype::Raw }>,
-    et_eq_reg: Datapoint<{ Datatype::Raw }>,
-    et_batt_service: Datapoint<{ Datatype::Raw }>,
-    ev_tempcomp: Datapoint<{ Datatype::Tempcomp }>,
-    ev_hvd: Datapoint<{ Datatype::Voltage }>,
-    ev_hvr: Datapoint<{ Datatype::Voltage }>,
-    evb_ref_lim: Datapoint<{ Datatype::Voltage }>,
-    etb_max: Datapoint<{ Datatype::Raw }>,
-    etb_min: Datapoint<{ Datatype::Raw }>,
-    ev_soc_g_gy: Datapoint<{ Datatype::Voltage }>,
-    ev_soc_gy_y: Datapoint<{ Datatype::Voltage }>,
-    ev_soc_y_yr: Datapoint<{ Datatype::Voltage }>,
-    ev_soc_yr_r: Datapoint<{ Datatype::Voltage }>,
-    emodbus_id: Datapoint<{ Datatype::Raw }>,
-    emeterbus_id: Datapoint<{ Datatype::Raw }>,
-    eib_lim: Datapoint<{ Datatype::Current }>,
-    eva_ref_fixed_init: Datapoint<{ Datatype::Voltage }>,
-    eva_ref_fixed_pct_init: Datapoint<{ Datatype::VoltagePercentage }>,
+    ev_absorp: Voltage,
+    ev_float: Voltage,
+    et_absorp: Raw,
+    et_absorp_ext: Raw,
+    ev_absorp_ext: Voltage,
+    ev_float_cancel: Voltage,
+    et_float_exit_cum: Raw,
+    ev_eq: Voltage,
+    et_eqcalendar: Raw,
+    et_eq_above: Raw,
+    et_eq_reg: Raw,
+    et_batt_service: Raw,
+    ev_tempcomp: Tempcomp,
+    ev_hvd: Voltage,
+    ev_hvr: Voltage,
+    evb_ref_lim: Voltage,
+    etb_max: Raw,
+    etb_min: Raw,
+    ev_soc_g_gy: Voltage,
+    ev_soc_gy_y: Voltage,
+    ev_soc_y_yr: Voltage,
+    ev_soc_yr_r: Voltage,
+    emodbus_id: Raw,
+    emeterbus_id: Raw,
+    eib_lim: Current,
+    eva_ref_fixed_init: Voltage,
+    eva_ref_fixed_pct_init: VoltagePercentage,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-enum Datatype {
-    Voltage,
-    VoltagePercentage,
-    Tempcomp,
-    Current,
-    Raw,
+impl Display for MpptEeprom {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ev_absorp: {}
+ev_float: {}
+et_absorp: {}
+et_absorp_ext: {}
+ev_absorp_ext: {}
+ev_float_cancel: {}
+et_float_exit_cum: {}
+ev_eq: {}
+et_eqcalendar: {}
+et_eq_above: {}
+et_eq_reg: {}
+et_batt_service: {}
+ev_tempcomp: {}
+ev_hvd: {}
+ev_hvr: {}
+evb_ref_lim: {}
+etb_max: {}
+etb_min: {}
+ev_soc_g_gy: {}
+ev_soc_gy_y: {}
+ev_soc_y_yr: {}
+ev_soc_yr_r: {}
+emodbus_id: {}
+emeterbus_id: {}
+eib_lim: {}
+eva_ref_fixed_init: {}
+eva_ref_fixed_pct_init: {}",
+            self.ev_absorp.to_string_v(),
+            self.ev_float.to_string_v(),
+            self.et_absorp.to_string_v(),
+            self.et_absorp_ext.to_string_v(),
+            self.ev_absorp_ext.to_string_v(),
+            self.ev_float_cancel.to_string_v(),
+            self.et_float_exit_cum.to_string_v(),
+            self.ev_eq.to_string_v(),
+            self.et_eqcalendar.to_string_v(),
+            self.et_eq_above.to_string_v(),
+            self.et_eq_reg.to_string_v(),
+            self.et_batt_service.to_string_v(),
+            self.ev_tempcomp.to_string_v(),
+            self.ev_hvd.to_string_v(),
+            self.ev_hvr.to_string_v(),
+            self.evb_ref_lim.to_string_v(),
+            self.etb_max.to_string_v(),
+            self.etb_min.to_string_v(),
+            self.ev_soc_g_gy.to_string_v(),
+            self.ev_soc_gy_y.to_string_v(),
+            self.ev_soc_y_yr.to_string_v(),
+            self.ev_soc_yr_r.to_string_v(),
+            self.emodbus_id.to_string_v(),
+            self.emeterbus_id.to_string_v(),
+            self.eib_lim.to_string_v(),
+            self.eva_ref_fixed_init.to_string_v(),
+            self.eva_ref_fixed_pct_init.to_string_v()
+        )
+    }
 }
 
-#[derive(Debug)]
-struct Datapoint<const T: Datatype> {
+trait DataPoint {
+    fn get_scaled(&self) -> f32;
+    fn get_scaled_from(&self, data: u16) -> f32;
+    fn get_raw(&self) -> u16;
+    fn to_string(&self) -> String;
+    fn to_string_v(&self) -> String {
+        format!("{}, raw: {}", self.to_string(), self.get_raw())
+    }
+    fn get_type(&self) -> String;
+    fn u16_from_f32(&self, input: f32) -> u16;
+    fn from_u16(data: u16) -> Self
+    where
+        Self: Sized;
+}
+
+impl fmt::Debug for dyn DataPoint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "{}", self.to_string_v())
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Voltage {
     data: u16,
-    info: Option<Info>,
 }
 
-impl<const T: Datatype> Datapoint<T> {
-    fn get_type(&self) -> Datatype {
-        T
-    }
-
+impl DataPoint for Voltage {
     fn get_scaled(&self) -> f32 {
-        let info = match &self.info {
-            Some(info) => info,
-            None => &Info {
-                v_scale: 1.,
-                i_scale: 1.,
-            },
-        };
-        match T {
-            Datatype::Voltage => self.data as f32 * info.v_scale * f32::powf(2., -15.),
-            Datatype::VoltagePercentage => self.data as f32 * 100. * f32::powf(2., -16.),
-            Datatype::Tempcomp => self.data as f32 * info.v_scale * f32::powf(2., -16.),
-            Datatype::Current => self.data as f32 * info.i_scale * f32::powf(2., -15.),
-            Datatype::Raw => self.data as f32,
-        }
+        self.get_scaled_from(self.data)
+    }
+    fn get_scaled_from(&self, data: u16) -> f32 {
+        let info = INFO_SCALE.lock().expect("Can't lock info");
+        data as f32 * info.v_scale * f32::powf(2., -15.)
     }
 
-    fn get_val(dt: Datatype, input: f32, info: &Info) -> u16 {
-        match dt {
-            Datatype::Voltage => ((input / f32::powf(2., -15.)) / info.v_scale) as u16,
-            Datatype::VoltagePercentage => ((input / f32::powf(2., -16.)) / 100.) as u16,
-            Datatype::Tempcomp => ((input / f32::powf(2., -16.)) / info.v_scale) as u16,
-            Datatype::Current => ((input / f32::powf(2., -15.)) / info.i_scale) as u16,
-            Datatype::Raw => input as u16,
-        }
+    fn from_u16(data: u16) -> Self {
+        Self { data }
     }
 
-    fn from_u16(data: u16, info: Option<Info>) -> Self {
-        Self { data, info }
+    fn get_raw(&self) -> u16 {
+        self.data
+    }
+
+    fn to_string(&self) -> String {
+        format!("{}V", self.get_scaled())
+    }
+
+    fn get_type(&self) -> String {
+        String::from("Voltage")
+    }
+
+    fn u16_from_f32(&self, input: f32) -> u16 {
+        let info = INFO_SCALE.lock().expect("Can't lock info");
+        ((input / f32::powf(2., -15.)) / info.v_scale) as u16
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Current {
+    data: u16,
+}
+
+impl DataPoint for Current {
+    fn get_scaled(&self) -> f32 {
+        self.get_scaled_from(self.data)
+    }
+    fn get_scaled_from(&self, data: u16) -> f32 {
+        let info = INFO_SCALE.lock().expect("Can't lock info");
+        data as f32 * info.i_scale * f32::powf(2., -15.)
+    }
+
+    fn from_u16(data: u16) -> Self {
+        Self { data }
+    }
+
+    fn get_raw(&self) -> u16 {
+        self.data
+    }
+
+    fn to_string(&self) -> String {
+        format!("{}A", self.get_scaled())
+    }
+
+    fn get_type(&self) -> String {
+        String::from("Current")
+    }
+
+    fn u16_from_f32(&self, input: f32) -> u16 {
+        let info = INFO_SCALE.lock().expect("Can't lock info");
+        ((input / f32::powf(2., -15.)) / info.i_scale) as u16
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct VoltagePercentage {
+    data: u16,
+}
+
+impl DataPoint for VoltagePercentage {
+    fn get_scaled(&self) -> f32 {
+        self.get_scaled_from(self.data)
+    }
+    fn get_scaled_from(&self, data: u16) -> f32 {
+        data as f32 * 100. * f32::powf(2., -16.)
+    }
+
+    fn from_u16(data: u16) -> Self {
+        Self { data }
+    }
+
+    fn get_raw(&self) -> u16 {
+        self.data
+    }
+
+    fn to_string(&self) -> String {
+        format!("{}%", self.get_scaled())
+    }
+
+    fn get_type(&self) -> String {
+        String::from("Voltage Percentage")
+    }
+
+    fn u16_from_f32(&self, input: f32) -> u16 {
+        ((input / f32::powf(2., -16.)) / 100.) as u16
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Tempcomp {
+    data: u16,
+}
+
+impl DataPoint for Tempcomp {
+    fn get_scaled(&self) -> f32 {
+        self.get_scaled_from(self.data)
+    }
+    fn get_scaled_from(&self, data: u16) -> f32 {
+        let info = INFO_SCALE.lock().expect("Can't lock info");
+        data as f32 * info.v_scale * f32::powf(2., -16.)
+    }
+
+    fn from_u16(data: u16) -> Self {
+        Self { data }
+    }
+
+    fn get_raw(&self) -> u16 {
+        self.data
+    }
+
+    fn to_string(&self) -> String {
+        format!("{} - temperature compensation value", self.get_scaled())
+    }
+
+    fn get_type(&self) -> String {
+        String::from("Temperature Compensation")
+    }
+
+    fn u16_from_f32(&self, input: f32) -> u16 {
+        let info = INFO_SCALE.lock().expect("Can't lock info");
+        ((input / f32::powf(2., -16.)) / info.v_scale) as u16
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Raw {
+    data: u16,
+}
+
+impl DataPoint for Raw {
+    fn get_scaled(&self) -> f32 {
+        self.get_scaled_from(self.data)
+    }
+    fn get_scaled_from(&self, data: u16) -> f32 {
+        data as f32
+    }
+
+    fn from_u16(data: u16) -> Self {
+        Self { data }
+    }
+
+    fn get_raw(&self) -> u16 {
+        self.data
+    }
+
+    fn to_string(&self) -> String {
+        String::from("raw value")
+    }
+
+    fn get_type(&self) -> String {
+        String::from("Raw Value")
+    }
+
+    fn u16_from_f32(&self, input: f32) -> u16 {
+        input as u16
     }
 }
 
@@ -331,54 +548,62 @@ fn main() {
             va_ref_fixed_pct: 0.,
         };
         let eeprom_data = MpptEeprom {
-            ev_absorp: Datapoint::from_u16(0x0000, None),
-            ev_float: Datapoint::from_u16(0x0000, None),
-            et_absorp: Datapoint::from_u16(0x0000, None),
-            et_absorp_ext: Datapoint::from_u16(0x0000, None),
-            ev_absorp_ext: Datapoint::from_u16(0x0000, None),
-            ev_float_cancel: Datapoint::from_u16(0x0000, None),
-            et_float_exit_cum: Datapoint::from_u16(0x0000, None),
-            ev_eq: Datapoint::from_u16(0x0000, None),
-            et_eqcalendar: Datapoint::from_u16(0x0000, None),
-            et_eq_above: Datapoint::from_u16(0x0000, None),
-            et_eq_reg: Datapoint::from_u16(0x0000, None),
-            et_batt_service: Datapoint::from_u16(0x0000, None),
-            ev_tempcomp: Datapoint::from_u16(0x0000, None),
-            ev_hvd: Datapoint::from_u16(0x0000, None),
-            ev_hvr: Datapoint::from_u16(0x0000, None),
-            evb_ref_lim: Datapoint::from_u16(0x0000, None),
-            etb_max: Datapoint::from_u16(0x0000, None),
-            etb_min: Datapoint::from_u16(0x0000, None),
-            ev_soc_g_gy: Datapoint::from_u16(0x0000, None),
-            ev_soc_gy_y: Datapoint::from_u16(0x0000, None),
-            ev_soc_y_yr: Datapoint::from_u16(0x0000, None),
-            ev_soc_yr_r: Datapoint::from_u16(0x0000, None),
-            emodbus_id: Datapoint::from_u16(0x0000, None),
-            emeterbus_id: Datapoint::from_u16(0x0000, None),
-            eib_lim: Datapoint::from_u16(0x0000, None),
-            eva_ref_fixed_init: Datapoint::from_u16(0x0000, None),
-            eva_ref_fixed_pct_init: Datapoint::from_u16(0x0000, None),
+            ev_absorp: Voltage::from_u16(0x0000),
+            ev_float: Voltage::from_u16(0x0000),
+            et_absorp: Raw::from_u16(0x0000),
+            et_absorp_ext: Raw::from_u16(0x0000),
+            ev_absorp_ext: Voltage::from_u16(0x0000),
+            ev_float_cancel: Voltage::from_u16(0x0000),
+            et_float_exit_cum: Raw::from_u16(0x0000),
+            ev_eq: Voltage::from_u16(0x0000),
+            et_eqcalendar: Raw::from_u16(0x0000),
+            et_eq_above: Raw::from_u16(0x0000),
+            et_eq_reg: Raw::from_u16(0x0000),
+            et_batt_service: Raw::from_u16(0x0000),
+            ev_tempcomp: Tempcomp::from_u16(0x0000),
+            ev_hvd: Voltage::from_u16(0x0000),
+            ev_hvr: Voltage::from_u16(0x0000),
+            evb_ref_lim: Voltage::from_u16(0x0000),
+            etb_max: Raw::from_u16(0x0000),
+            etb_min: Raw::from_u16(0x0000),
+            ev_soc_g_gy: Voltage::from_u16(0x0000),
+            ev_soc_gy_y: Voltage::from_u16(0x0000),
+            ev_soc_y_yr: Voltage::from_u16(0x0000),
+            ev_soc_yr_r: Voltage::from_u16(0x0000),
+            emodbus_id: Raw::from_u16(0x0000),
+            emeterbus_id: Raw::from_u16(0x0000),
+            eib_lim: Current::from_u16(0x0000),
+            eva_ref_fixed_init: Voltage::from_u16(0x0000),
+            eva_ref_fixed_pct_init: VoltagePercentage::from_u16(0x0000),
         };
         (info, ram_data, eeprom_data)
     };
 
+    // let info = Rc::new(_info);
+
     match args.command {
         Some(Commands::Get { name }) => {
-            let t = match_datapoint_type(name.as_str(), &eeprom_data);
-            println!("{}: {} - {:?}", name, t.val, t.dt);
+            let t = match_datapoint(name.as_str(), &eeprom_data);
+            println!("{name}: {}", t.to_string_v());
             return;
         }
-        Some(Commands::Set { name, value: _ }) => {
+        Some(Commands::Set { name, value }) => {
             println!("set var {}", name);
-            let t = match_datapoint_type(name.as_str(), &eeprom_data);
-            println!("type: {:?}", t);
+            let t = match_datapoint(name.as_str(), &eeprom_data);
+            println!("Existing value:\n  {:?}", t);
+            let val = t.u16_from_f32(value);
+            println!(
+                "New value:\n  Scaled: {}, Raw: {}",
+                t.get_scaled_from(val),
+                val
+            );
             return;
         }
         Some(Commands::GetRam) => {
             println!("ram: {:#?}", ram_data);
         }
         None => {
-            println!("eeprom: {:#?}", eeprom_data);
+            println!("eeprom: {}", eeprom_data);
         }
     }
 }
@@ -405,6 +630,12 @@ fn get_data(modbus: &Modbus) -> (Info, MpptRam, MpptEeprom) {
         .read_registers(0x0000, RAM_DATA_SIZE + 1, &mut data_in)
         .expect("couldnt");
     let info = Info::from(&data_in);
+
+    let mut a = INFO_SCALE.lock().expect("pee");
+    a.v_scale = info.v_scale;
+    a.i_scale = info.i_scale;
+    drop(a);
+
     let ram_data = MpptRam {
         v_pu: info.scale_voltage_f(
             data_in[OffsetsRam::V_PU_HI] as f32
@@ -480,162 +711,134 @@ fn get_data(modbus: &Modbus) -> (Info, MpptRam, MpptEeprom) {
         .expect("could not get eeprom data");
 
     let eeprom_data = MpptEeprom {
-        ev_absorp: Datapoint::from_u16(data_in[OffsetsEeprom::EV_ABSORP], Some(info.clone())),
-        ev_float: Datapoint::from_u16(data_in[OffsetsEeprom::EV_FLOAT], Some(info.clone())),
-        et_absorp: Datapoint::from_u16(data_in[OffsetsEeprom::ET_ABSORP], Some(info.clone())),
-        et_absorp_ext: Datapoint::from_u16(
-            data_in[OffsetsEeprom::ET_ABSORP_EXT],
-            Some(info.clone()),
-        ),
-        ev_absorp_ext: Datapoint::from_u16(
-            data_in[OffsetsEeprom::EV_ABSORP_EXT],
-            Some(info.clone()),
-        ),
-        ev_float_cancel: Datapoint::from_u16(
-            data_in[OffsetsEeprom::EV_FLOAT_CANCEL],
-            Some(info.clone()),
-        ),
-        et_float_exit_cum: Datapoint::from_u16(
-            data_in[OffsetsEeprom::ET_FLOAT_EXIT_CUM],
-            Some(info.clone()),
-        ),
-        ev_eq: Datapoint::from_u16(data_in[OffsetsEeprom::EV_EQ], Some(info.clone())),
-        et_eqcalendar: Datapoint::from_u16(
-            data_in[OffsetsEeprom::ET_EQCALENDAR],
-            Some(info.clone()),
-        ),
-        et_eq_above: Datapoint::from_u16(data_in[OffsetsEeprom::ET_EQ_ABOVE], Some(info.clone())),
-        et_eq_reg: Datapoint::from_u16(data_in[OffsetsEeprom::ET_EQ_REG], Some(info.clone())),
-        et_batt_service: Datapoint::from_u16(
-            data_in[OffsetsEeprom::ET_BATT_SERVICE],
-            Some(info.clone()),
-        ),
-        ev_tempcomp: Datapoint::from_u16(data_in[OffsetsEeprom::EV_TEMPCOMP], Some(info.clone())),
-        ev_hvd: Datapoint::from_u16(data_in[OffsetsEeprom::EV_HVD], Some(info.clone())),
-        ev_hvr: Datapoint::from_u16(data_in[OffsetsEeprom::EV_HVR], Some(info.clone())),
-        evb_ref_lim: Datapoint::from_u16(data_in[OffsetsEeprom::EVB_REF_LIM], Some(info.clone())),
-        etb_max: Datapoint::from_u16(data_in[OffsetsEeprom::ETB_MAX], Some(info.clone())),
-        etb_min: Datapoint::from_u16(data_in[OffsetsEeprom::ETB_MIN], Some(info.clone())),
-        ev_soc_g_gy: Datapoint::from_u16(data_in[OffsetsEeprom::EV_SOC_G_GY], Some(info.clone())),
-        ev_soc_gy_y: Datapoint::from_u16(data_in[OffsetsEeprom::EV_SOC_GY_Y], Some(info.clone())),
-        ev_soc_y_yr: Datapoint::from_u16(data_in[OffsetsEeprom::EV_SOC_Y_YR], Some(info.clone())),
-        ev_soc_yr_r: Datapoint::from_u16(data_in[OffsetsEeprom::EV_SOC_YR_R], Some(info.clone())),
-        emodbus_id: Datapoint::from_u16(data_in[OffsetsEeprom::EMODBUS_ID], Some(info.clone())),
-        emeterbus_id: Datapoint::from_u16(data_in[OffsetsEeprom::EMETERBUS_ID], Some(info.clone())),
-        eib_lim: Datapoint::from_u16(data_in[OffsetsEeprom::EIB_LIM], Some(info.clone())),
-        eva_ref_fixed_init: Datapoint::from_u16(
-            data_in[OffsetsEeprom::EVA_REF_FIXED_INIT],
-            Some(info.clone()),
-        ),
-        eva_ref_fixed_pct_init: Datapoint::from_u16(
+        ev_absorp: Voltage::from_u16(data_in[OffsetsEeprom::EV_ABSORP]),
+        ev_float: Voltage::from_u16(data_in[OffsetsEeprom::EV_FLOAT]),
+        et_absorp: Raw::from_u16(data_in[OffsetsEeprom::ET_ABSORP]),
+        et_absorp_ext: Raw::from_u16(data_in[OffsetsEeprom::ET_ABSORP_EXT]),
+        ev_absorp_ext: Voltage::from_u16(data_in[OffsetsEeprom::EV_ABSORP_EXT]),
+        ev_float_cancel: Voltage::from_u16(data_in[OffsetsEeprom::EV_FLOAT_CANCEL]),
+        et_float_exit_cum: Raw::from_u16(data_in[OffsetsEeprom::ET_FLOAT_EXIT_CUM]),
+        ev_eq: Voltage::from_u16(data_in[OffsetsEeprom::EV_EQ]),
+        et_eqcalendar: Raw::from_u16(data_in[OffsetsEeprom::ET_EQCALENDAR]),
+        et_eq_above: Raw::from_u16(data_in[OffsetsEeprom::ET_EQ_ABOVE]),
+        et_eq_reg: Raw::from_u16(data_in[OffsetsEeprom::ET_EQ_REG]),
+        et_batt_service: Raw::from_u16(data_in[OffsetsEeprom::ET_BATT_SERVICE]),
+        ev_tempcomp: Tempcomp::from_u16(data_in[OffsetsEeprom::EV_TEMPCOMP]),
+        ev_hvd: Voltage::from_u16(data_in[OffsetsEeprom::EV_HVD]),
+        ev_hvr: Voltage::from_u16(data_in[OffsetsEeprom::EV_HVR]),
+        evb_ref_lim: Voltage::from_u16(data_in[OffsetsEeprom::EVB_REF_LIM]),
+        etb_max: Raw::from_u16(data_in[OffsetsEeprom::ETB_MAX]),
+        etb_min: Raw::from_u16(data_in[OffsetsEeprom::ETB_MIN]),
+        ev_soc_g_gy: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_G_GY]),
+        ev_soc_gy_y: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_GY_Y]),
+        ev_soc_y_yr: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_Y_YR]),
+        ev_soc_yr_r: Voltage::from_u16(data_in[OffsetsEeprom::EV_SOC_YR_R]),
+        emodbus_id: Raw::from_u16(data_in[OffsetsEeprom::EMODBUS_ID]),
+        emeterbus_id: Raw::from_u16(data_in[OffsetsEeprom::EMETERBUS_ID]),
+        eib_lim: Current::from_u16(data_in[OffsetsEeprom::EIB_LIM]),
+        eva_ref_fixed_init: Voltage::from_u16(data_in[OffsetsEeprom::EVA_REF_FIXED_INIT]),
+        eva_ref_fixed_pct_init: VoltagePercentage::from_u16(
             data_in[OffsetsEeprom::EVA_REF_FIXED_PCT_INIT],
-            Some(info.clone()),
         ),
     };
 
     return (info, ram_data, eeprom_data);
 }
 
-// fn match_datapoint(name: &str, data: &MpptEeprom) -> Datapoint<{ t }> {
-//     match name.to_lowercase().as_str() {
-//         "ev_absorp" => data.ev_absorp,
-//         "ev_float" => data.ev_float,
-//         "et_absorp" => data.et_absorp,
-//         "et_absorp_ext" => data.et_absorp_ext,
-//         "ev_absorp_ext" => data.ev_absorp_ext,
-//         "ev_float_cancel" => data.ev_float_cancel,
-//         "et_float_exit_cum" => data.et_float_exit_cum,
-//         "ev_eq" => data.ev_eq,
-//         "et_eqcalendar" => data.et_eqcalendar,
-//         "et_eq_above" => data.et_eq_above,
-//         "et_eq_reg" => data.et_eq_reg,
-//         "et_batt_service" => data.et_batt_service,
-//         "ev_tempcomp" => data.ev_tempcomp,
-//         "ev_hvd" => data.ev_hvd,
-//         "ev_hvr" => data.ev_hvr,
-//         "evb_ref_lim" => data.evb_ref_lim,
-//         "etb_max" => data.etb_max,
-//         "etb_min" => data.etb_min,
-//         "ev_soc_g_gy" => data.ev_soc_g_gy,
-//         "ev_soc_gy_y" => data.ev_soc_gy_y,
-//         "ev_soc_y_yr" => data.ev_soc_y_yr,
-//         "ev_soc_yr_r" => data.ev_soc_yr_r,
-//         "emodbus_id" => data.emodbus_id,
-//         "emeterbus_id" => data.emeterbus_id,
-//         "eib_lim" => data.eib_lim,
-//         "eva_ref_fixed_init" => data.eva_ref_fixed_init,
-//         "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init,
+fn match_datapoint(name: &str, data: &MpptEeprom) -> Box<dyn DataPoint> {
+    match name.to_lowercase().as_str() {
+        "ev_absorp" => Box::new(data.ev_absorp),
+        "ev_float" => Box::new(data.ev_float),
+        "et_absorp" => Box::new(data.et_absorp),
+        "et_absorp_ext" => Box::new(data.et_absorp_ext),
+        "ev_absorp_ext" => Box::new(data.ev_absorp_ext),
+        "ev_float_cancel" => Box::new(data.ev_float_cancel),
+        "et_float_exit_cum" => Box::new(data.et_float_exit_cum),
+        "ev_eq" => Box::new(data.ev_eq),
+        "et_eqcalendar" => Box::new(data.et_eqcalendar),
+        "et_eq_above" => Box::new(data.et_eq_above),
+        "et_eq_reg" => Box::new(data.et_eq_reg),
+        "et_batt_service" => Box::new(data.et_batt_service),
+        "ev_tempcomp" => Box::new(data.ev_tempcomp),
+        "ev_hvd" => Box::new(data.ev_hvd),
+        "ev_hvr" => Box::new(data.ev_hvr),
+        "evb_ref_lim" => Box::new(data.evb_ref_lim),
+        "etb_max" => Box::new(data.etb_max),
+        "etb_min" => Box::new(data.etb_min),
+        "ev_soc_g_gy" => Box::new(data.ev_soc_g_gy),
+        "ev_soc_gy_y" => Box::new(data.ev_soc_gy_y),
+        "ev_soc_y_yr" => Box::new(data.ev_soc_y_yr),
+        "ev_soc_yr_r" => Box::new(data.ev_soc_yr_r),
+        "emodbus_id" => Box::new(data.emodbus_id),
+        "emeterbus_id" => Box::new(data.emeterbus_id),
+        "eib_lim" => Box::new(data.eib_lim),
+        "eva_ref_fixed_init" => Box::new(data.eva_ref_fixed_init),
+        "eva_ref_fixed_pct_init" => Box::new(data.eva_ref_fixed_pct_init),
+        &_ => todo!(),
+    }
+}
+
+// fn match_datapoint_type(name: &str, data: &MpptEeprom) -> DatapointDisplay {
+//     // let a = data.ev_absorp;
+//     let t = match name.to_lowercase().as_str() {
+//         "ev_absorp" => data.ev_absorp.get_type(),
+//         "ev_float" => data.ev_float.get_type(),
+//         "et_absorp" => data.et_absorp.get_type(),
+//         "et_absorp_ext" => data.et_absorp_ext.get_type(),
+//         "ev_absorp_ext" => data.ev_absorp_ext.get_type(),
+//         "ev_float_cancel" => data.ev_float_cancel.get_type(),
+//         "et_float_exit_cum" => data.et_float_exit_cum.get_type(),
+//         "ev_eq" => data.ev_eq.get_type(),
+//         "et_eqcalendar" => data.et_eqcalendar.get_type(),
+//         "et_eq_above" => data.et_eq_above.get_type(),
+//         "et_eq_reg" => data.et_eq_reg.get_type(),
+//         "et_batt_service" => data.et_batt_service.get_type(),
+//         "ev_tempcomp" => data.ev_tempcomp.get_type(),
+//         "ev_hvd" => data.ev_hvd.get_type(),
+//         "ev_hvr" => data.ev_hvr.get_type(),
+//         "evb_ref_lim" => data.evb_ref_lim.get_type(),
+//         "etb_max" => data.etb_max.get_type(),
+//         "etb_min" => data.etb_min.get_type(),
+//         "ev_soc_g_gy" => data.ev_soc_g_gy.get_type(),
+//         "ev_soc_gy_y" => data.ev_soc_gy_y.get_type(),
+//         "ev_soc_y_yr" => data.ev_soc_y_yr.get_type(),
+//         "ev_soc_yr_r" => data.ev_soc_yr_r.get_type(),
+//         "emodbus_id" => data.emodbus_id.get_type(),
+//         "emeterbus_id" => data.emeterbus_id.get_type(),
+//         "eib_lim" => data.eib_lim.get_type(),
+//         "eva_ref_fixed_init" => data.eva_ref_fixed_init.get_type(),
+//         "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init.get_type(),
 //         &_ => todo!(),
-//     }
+//     };
+//     let v = match name.to_lowercase().as_str() {
+//         "ev_absorp" => data.ev_absorp.get_scaled(),
+//         "ev_float" => data.ev_float.get_scaled(),
+//         "et_absorp" => data.et_absorp.get_scaled(),
+//         "et_absorp_ext" => data.et_absorp_ext.get_scaled(),
+//         "ev_absorp_ext" => data.ev_absorp_ext.get_scaled(),
+//         "ev_float_cancel" => data.ev_float_cancel.get_scaled(),
+//         "et_float_exit_cum" => data.et_float_exit_cum.get_scaled(),
+//         "ev_eq" => data.ev_eq.get_scaled(),
+//         "et_eqcalendar" => data.et_eqcalendar.get_scaled(),
+//         "et_eq_above" => data.et_eq_above.get_scaled(),
+//         "et_eq_reg" => data.et_eq_reg.get_scaled(),
+//         "et_batt_service" => data.et_batt_service.get_scaled(),
+//         "ev_tempcomp" => data.ev_tempcomp.get_scaled(),
+//         "ev_hvd" => data.ev_hvd.get_scaled(),
+//         "ev_hvr" => data.ev_hvr.get_scaled(),
+//         "evb_ref_lim" => data.evb_ref_lim.get_scaled(),
+//         "etb_max" => data.etb_max.get_scaled(),
+//         "etb_min" => data.etb_min.get_scaled(),
+//         "ev_soc_g_gy" => data.ev_soc_g_gy.get_scaled(),
+//         "ev_soc_gy_y" => data.ev_soc_gy_y.get_scaled(),
+//         "ev_soc_y_yr" => data.ev_soc_y_yr.get_scaled(),
+//         "ev_soc_yr_r" => data.ev_soc_yr_r.get_scaled(),
+//         "emodbus_id" => data.emodbus_id.get_scaled(),
+//         "emeterbus_id" => data.emeterbus_id.get_scaled(),
+//         "eib_lim" => data.eib_lim.get_scaled(),
+//         "eva_ref_fixed_init" => data.eva_ref_fixed_init.get_scaled(),
+//         "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init.get_scaled(),
+//         &_ => todo!(),
+//     };
+//     DatapointDisplay { dt: t, val: v }
 // }
-
-#[derive(Debug)]
-struct DatapointDisplay {
-    dt: Datatype,
-    val: f32,
-}
-
-fn match_datapoint_type(name: &str, data: &MpptEeprom) -> DatapointDisplay {
-    // let a = data.ev_absorp;
-    let t = match name.to_lowercase().as_str() {
-        "ev_absorp" => data.ev_absorp.get_type(),
-        "ev_float" => data.ev_float.get_type(),
-        "et_absorp" => data.et_absorp.get_type(),
-        "et_absorp_ext" => data.et_absorp_ext.get_type(),
-        "ev_absorp_ext" => data.ev_absorp_ext.get_type(),
-        "ev_float_cancel" => data.ev_float_cancel.get_type(),
-        "et_float_exit_cum" => data.et_float_exit_cum.get_type(),
-        "ev_eq" => data.ev_eq.get_type(),
-        "et_eqcalendar" => data.et_eqcalendar.get_type(),
-        "et_eq_above" => data.et_eq_above.get_type(),
-        "et_eq_reg" => data.et_eq_reg.get_type(),
-        "et_batt_service" => data.et_batt_service.get_type(),
-        "ev_tempcomp" => data.ev_tempcomp.get_type(),
-        "ev_hvd" => data.ev_hvd.get_type(),
-        "ev_hvr" => data.ev_hvr.get_type(),
-        "evb_ref_lim" => data.evb_ref_lim.get_type(),
-        "etb_max" => data.etb_max.get_type(),
-        "etb_min" => data.etb_min.get_type(),
-        "ev_soc_g_gy" => data.ev_soc_g_gy.get_type(),
-        "ev_soc_gy_y" => data.ev_soc_gy_y.get_type(),
-        "ev_soc_y_yr" => data.ev_soc_y_yr.get_type(),
-        "ev_soc_yr_r" => data.ev_soc_yr_r.get_type(),
-        "emodbus_id" => data.emodbus_id.get_type(),
-        "emeterbus_id" => data.emeterbus_id.get_type(),
-        "eib_lim" => data.eib_lim.get_type(),
-        "eva_ref_fixed_init" => data.eva_ref_fixed_init.get_type(),
-        "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init.get_type(),
-        &_ => todo!(),
-    };
-    let v = match name.to_lowercase().as_str() {
-        "ev_absorp" => data.ev_absorp.get_scaled(),
-        "ev_float" => data.ev_float.get_scaled(),
-        "et_absorp" => data.et_absorp.get_scaled(),
-        "et_absorp_ext" => data.et_absorp_ext.get_scaled(),
-        "ev_absorp_ext" => data.ev_absorp_ext.get_scaled(),
-        "ev_float_cancel" => data.ev_float_cancel.get_scaled(),
-        "et_float_exit_cum" => data.et_float_exit_cum.get_scaled(),
-        "ev_eq" => data.ev_eq.get_scaled(),
-        "et_eqcalendar" => data.et_eqcalendar.get_scaled(),
-        "et_eq_above" => data.et_eq_above.get_scaled(),
-        "et_eq_reg" => data.et_eq_reg.get_scaled(),
-        "et_batt_service" => data.et_batt_service.get_scaled(),
-        "ev_tempcomp" => data.ev_tempcomp.get_scaled(),
-        "ev_hvd" => data.ev_hvd.get_scaled(),
-        "ev_hvr" => data.ev_hvr.get_scaled(),
-        "evb_ref_lim" => data.evb_ref_lim.get_scaled(),
-        "etb_max" => data.etb_max.get_scaled(),
-        "etb_min" => data.etb_min.get_scaled(),
-        "ev_soc_g_gy" => data.ev_soc_g_gy.get_scaled(),
-        "ev_soc_gy_y" => data.ev_soc_gy_y.get_scaled(),
-        "ev_soc_y_yr" => data.ev_soc_y_yr.get_scaled(),
-        "ev_soc_yr_r" => data.ev_soc_yr_r.get_scaled(),
-        "emodbus_id" => data.emodbus_id.get_scaled(),
-        "emeterbus_id" => data.emeterbus_id.get_scaled(),
-        "eib_lim" => data.eib_lim.get_scaled(),
-        "eva_ref_fixed_init" => data.eva_ref_fixed_init.get_scaled(),
-        "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init.get_scaled(),
-        &_ => todo!(),
-    };
-    DatapointDisplay { dt: t, val: v }
-}

@@ -480,10 +480,11 @@ fn main() {
         return;
     }
 
-    let (_info, ram_data, eeprom_data) = if !args.fake {
+    let (_info, ram_data, eeprom_data, modbus) = if !args.fake {
         println!("Connecting to device on {}", args.serial_port);
         let modbus = connect_modbus(&args.serial_port);
-        get_data(&modbus)
+        let (a, b, c) = get_data(&modbus);
+        (a, b, c, Some(modbus))
     } else {
         let info = Info {
             v_scale: 1.,
@@ -580,7 +581,7 @@ fn main() {
             eva_ref_fixed_init: Voltage::from_u16(0x0000),
             eva_ref_fixed_pct_init: VoltagePercentage::from_u16(0x0000),
         };
-        (info, ram_data, eeprom_data)
+        (info, ram_data, eeprom_data, None)
     };
 
     match args.command {
@@ -590,15 +591,29 @@ fn main() {
             return;
         }
         Some(Commands::Set { name, value }) => {
-            println!("set var {}", name);
+            println!("setting var {}", name);
             let t = match_datapoint(name.as_str(), &eeprom_data);
             println!("Existing value:\n  {:?}", t);
             let val = t.u16_from_f32(value);
             println!(
-                "New value:\n  Scaled: {}, Raw: {}",
+                "New value:\n  Scaled: {}, Raw: {}\n",
                 t.get_scaled_from(val),
                 val
             );
+            match modbus {
+                Some(modbus) => {
+                    let offset = match_offset(&name) as u16;
+                    println!("Writing {} to offset {}", val, offset);
+                    modbus
+                        .write_register(EEPROM_BEGIN as u16 + offset, val)
+                        .expect("could not set value");
+                }
+                None => {
+                    println!("No modbus device connected");
+                    let offset = match_offset(&name) as u16;
+                    println!("Would write {} to offset {}", val, offset);
+                }
+            }
             return;
         }
         Some(Commands::GetRam) => {
@@ -776,6 +791,39 @@ fn match_datapoint(name: &str, data: &MpptEeprom) -> Box<dyn DataPoint> {
         "eib_lim" => Box::new(data.eib_lim),
         "eva_ref_fixed_init" => Box::new(data.eva_ref_fixed_init),
         "eva_ref_fixed_pct_init" => Box::new(data.eva_ref_fixed_pct_init),
+        &_ => todo!(),
+    }
+}
+
+fn match_offset(name: &str) -> usize {
+    match name.to_lowercase().as_str() {
+        "ev_absorp" => OffsetsEeprom::EV_ABSORP,
+        "ev_float" => OffsetsEeprom::EV_FLOAT,
+        "et_absorp" => OffsetsEeprom::ET_ABSORP,
+        "et_absorp_ext" => OffsetsEeprom::ET_BATT_SERVICE,
+        "ev_absorp_ext" => OffsetsEeprom::EV_ABSORP_EXT,
+        "ev_float_cancel" => OffsetsEeprom::EV_FLOAT_CANCEL,
+        "et_float_exit_cum" => OffsetsEeprom::ET_FLOAT_EXIT_CUM,
+        "ev_eq" => OffsetsEeprom::EV_EQ,
+        "et_eqcalendar" => OffsetsEeprom::ET_EQCALENDAR,
+        "et_eq_above" => OffsetsEeprom::ET_EQ_ABOVE,
+        "et_eq_reg" => OffsetsEeprom::ET_EQ_REG,
+        "et_batt_service" => OffsetsEeprom::ET_BATT_SERVICE,
+        "ev_tempcomp" => OffsetsEeprom::EV_TEMPCOMP,
+        "ev_hvd" => OffsetsEeprom::EV_HVD,
+        "ev_hvr" => OffsetsEeprom::EV_HVR,
+        "evb_ref_lim" => OffsetsEeprom::EVB_REF_LIM,
+        "etb_max" => OffsetsEeprom::ETB_MAX,
+        "etb_min" => OffsetsEeprom::ETB_MIN,
+        "ev_soc_g_gy" => OffsetsEeprom::EV_SOC_G_GY,
+        "ev_soc_gy_y" => OffsetsEeprom::EV_SOC_GY_Y,
+        "ev_soc_y_yr" => OffsetsEeprom::EV_SOC_Y_YR,
+        "ev_soc_yr_r" => OffsetsEeprom::EV_SOC_YR_R,
+        "emodbus_id" => OffsetsEeprom::EMODBUS_ID,
+        "emeterbus_id" => OffsetsEeprom::EMETERBUS_ID,
+        "eib_lim" => OffsetsEeprom::EIB_LIM,
+        "eva_ref_fixed_init" => OffsetsEeprom::EVA_REF_FIXED_INIT,
+        "eva_ref_fixed_pct_init" => OffsetsEeprom::EVA_REF_FIXED_PCT_INIT,
         &_ => todo!(),
     }
 }

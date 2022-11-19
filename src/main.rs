@@ -21,7 +21,6 @@ const DEVICE_ID: u8 = 0x01;
 const RAM_DATA_SIZE: u16 = 0x005B;
 const EEPROM_BEGIN: u16 = 0xE000;
 const EEPROM_DATA_SIZE: u16 = 0x0021;
-// const EEPROM_DATA_SIZE: u16 = 0xE0CD - EEPROM_BEGIN;
 
 static INFO_SCALE: Mutex<Info> = Mutex::new(Info {
     v_scale: 1.,
@@ -223,6 +222,7 @@ impl DataPoint for Voltage {
     fn get_scaled(&self) -> f32 {
         self.get_scaled_from(self.data)
     }
+
     fn get_scaled_from(&self, data: u16) -> f32 {
         let info = INFO_SCALE.lock().expect("Can't lock info");
         data as f32 * info.v_scale * f32::powf(2., -15.)
@@ -259,6 +259,7 @@ impl DataPoint for Current {
     fn get_scaled(&self) -> f32 {
         self.get_scaled_from(self.data)
     }
+
     fn get_scaled_from(&self, data: u16) -> f32 {
         let info = INFO_SCALE.lock().expect("Can't lock info");
         data as f32 * info.i_scale * f32::powf(2., -15.)
@@ -295,6 +296,7 @@ impl DataPoint for VoltagePercentage {
     fn get_scaled(&self) -> f32 {
         self.get_scaled_from(self.data)
     }
+
     fn get_scaled_from(&self, data: u16) -> f32 {
         data as f32 * 100. * f32::powf(2., -16.)
     }
@@ -329,6 +331,7 @@ impl DataPoint for Tempcomp {
     fn get_scaled(&self) -> f32 {
         self.get_scaled_from(self.data)
     }
+
     fn get_scaled_from(&self, data: u16) -> f32 {
         let info = INFO_SCALE.lock().expect("Can't lock info");
         data as f32 * info.v_scale * f32::powf(2., -16.)
@@ -365,6 +368,7 @@ impl DataPoint for Raw {
     fn get_scaled(&self) -> f32 {
         self.get_scaled_from(self.data)
     }
+
     fn get_scaled_from(&self, data: u16) -> f32 {
         data as f32
     }
@@ -579,8 +583,6 @@ fn main() {
         (info, ram_data, eeprom_data)
     };
 
-    // let info = Rc::new(_info);
-
     match args.command {
         Some(Commands::Get { name }) => {
             let t = match_datapoint(name.as_str(), &eeprom_data);
@@ -631,7 +633,7 @@ fn get_data(modbus: &Modbus) -> (Info, MpptRam, MpptEeprom) {
         .expect("couldnt");
     let info = Info::from(&data_in);
 
-    let mut a = INFO_SCALE.lock().expect("pee");
+    let mut a = INFO_SCALE.lock().expect("Couldn't lock info");
     a.v_scale = info.v_scale;
     a.i_scale = info.i_scale;
     drop(a);
@@ -777,68 +779,3 @@ fn match_datapoint(name: &str, data: &MpptEeprom) -> Box<dyn DataPoint> {
         &_ => todo!(),
     }
 }
-
-// fn match_datapoint_type(name: &str, data: &MpptEeprom) -> DatapointDisplay {
-//     // let a = data.ev_absorp;
-//     let t = match name.to_lowercase().as_str() {
-//         "ev_absorp" => data.ev_absorp.get_type(),
-//         "ev_float" => data.ev_float.get_type(),
-//         "et_absorp" => data.et_absorp.get_type(),
-//         "et_absorp_ext" => data.et_absorp_ext.get_type(),
-//         "ev_absorp_ext" => data.ev_absorp_ext.get_type(),
-//         "ev_float_cancel" => data.ev_float_cancel.get_type(),
-//         "et_float_exit_cum" => data.et_float_exit_cum.get_type(),
-//         "ev_eq" => data.ev_eq.get_type(),
-//         "et_eqcalendar" => data.et_eqcalendar.get_type(),
-//         "et_eq_above" => data.et_eq_above.get_type(),
-//         "et_eq_reg" => data.et_eq_reg.get_type(),
-//         "et_batt_service" => data.et_batt_service.get_type(),
-//         "ev_tempcomp" => data.ev_tempcomp.get_type(),
-//         "ev_hvd" => data.ev_hvd.get_type(),
-//         "ev_hvr" => data.ev_hvr.get_type(),
-//         "evb_ref_lim" => data.evb_ref_lim.get_type(),
-//         "etb_max" => data.etb_max.get_type(),
-//         "etb_min" => data.etb_min.get_type(),
-//         "ev_soc_g_gy" => data.ev_soc_g_gy.get_type(),
-//         "ev_soc_gy_y" => data.ev_soc_gy_y.get_type(),
-//         "ev_soc_y_yr" => data.ev_soc_y_yr.get_type(),
-//         "ev_soc_yr_r" => data.ev_soc_yr_r.get_type(),
-//         "emodbus_id" => data.emodbus_id.get_type(),
-//         "emeterbus_id" => data.emeterbus_id.get_type(),
-//         "eib_lim" => data.eib_lim.get_type(),
-//         "eva_ref_fixed_init" => data.eva_ref_fixed_init.get_type(),
-//         "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init.get_type(),
-//         &_ => todo!(),
-//     };
-//     let v = match name.to_lowercase().as_str() {
-//         "ev_absorp" => data.ev_absorp.get_scaled(),
-//         "ev_float" => data.ev_float.get_scaled(),
-//         "et_absorp" => data.et_absorp.get_scaled(),
-//         "et_absorp_ext" => data.et_absorp_ext.get_scaled(),
-//         "ev_absorp_ext" => data.ev_absorp_ext.get_scaled(),
-//         "ev_float_cancel" => data.ev_float_cancel.get_scaled(),
-//         "et_float_exit_cum" => data.et_float_exit_cum.get_scaled(),
-//         "ev_eq" => data.ev_eq.get_scaled(),
-//         "et_eqcalendar" => data.et_eqcalendar.get_scaled(),
-//         "et_eq_above" => data.et_eq_above.get_scaled(),
-//         "et_eq_reg" => data.et_eq_reg.get_scaled(),
-//         "et_batt_service" => data.et_batt_service.get_scaled(),
-//         "ev_tempcomp" => data.ev_tempcomp.get_scaled(),
-//         "ev_hvd" => data.ev_hvd.get_scaled(),
-//         "ev_hvr" => data.ev_hvr.get_scaled(),
-//         "evb_ref_lim" => data.evb_ref_lim.get_scaled(),
-//         "etb_max" => data.etb_max.get_scaled(),
-//         "etb_min" => data.etb_min.get_scaled(),
-//         "ev_soc_g_gy" => data.ev_soc_g_gy.get_scaled(),
-//         "ev_soc_gy_y" => data.ev_soc_gy_y.get_scaled(),
-//         "ev_soc_y_yr" => data.ev_soc_y_yr.get_scaled(),
-//         "ev_soc_yr_r" => data.ev_soc_yr_r.get_scaled(),
-//         "emodbus_id" => data.emodbus_id.get_scaled(),
-//         "emeterbus_id" => data.emeterbus_id.get_scaled(),
-//         "eib_lim" => data.eib_lim.get_scaled(),
-//         "eva_ref_fixed_init" => data.eva_ref_fixed_init.get_scaled(),
-//         "eva_ref_fixed_pct_init" => data.eva_ref_fixed_pct_init.get_scaled(),
-//         &_ => todo!(),
-//     };
-//     DatapointDisplay { dt: t, val: v }
-// }

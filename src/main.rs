@@ -620,7 +620,7 @@ fn main() {
             println!("ram: {:#?}", ram_data);
         }
         None => {
-            println!("eeprom: {}", eeprom_data);
+            println!("{eeprom_data}");
         }
     }
 }

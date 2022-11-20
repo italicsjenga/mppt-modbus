@@ -1,7 +1,11 @@
 [package]
 name = "mppt-control"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+description = "Read/write parameters on the Morningstar TriStar using MPPT"
+license = "GPL 3.0"
+readme = "README.md"
+authors = ["Alex Janka <alex@alexjanka.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

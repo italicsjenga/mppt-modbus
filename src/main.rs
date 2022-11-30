@@ -22,6 +22,14 @@ const RAM_DATA_SIZE: u16 = 0x005B;
 const EEPROM_BEGIN: u16 = 0xE000;
 const EEPROM_DATA_SIZE: u16 = 0x0021;
 
+const DEFAULT_SERIAL: &str = if cfg!(target_os = "linux") {
+    "/dev/ttyUSB0"
+} else if cfg!(target_os = "macos") {
+    "/dev/tty.usbserial-DUT1"
+} else {
+    "unknown"
+};
+
 static INFO_SCALE: Mutex<Info> = Mutex::new(Info {
     v_scale: 1.,
     i_scale: 1.,
@@ -399,7 +407,7 @@ impl DataPoint for Raw {
 #[clap(author, about, long_about = None)]
 struct Args {
     /// Serial port to connect to MPPT
-    #[clap(short, long, default_value = "/dev/ttyUSB0")]
+    #[clap(short, long, default_value = DEFAULT_SERIAL)]
     serial_port: String,
 
     /// list serial ports on this system

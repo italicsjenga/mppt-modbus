@@ -1,14 +1,15 @@
 #![allow(dead_code)]
 
-mod datatypes;
 mod mppt_structs;
 mod offsets;
-use crate::datatypes::*;
 use crate::mppt_structs::{MpptData, MpptEeprom, MpptRam};
 use crate::offsets::{OffsetsEeprom, OffsetsRam};
 use clap::{Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
-use std::{fmt::Debug, path::Path, process::Command, sync::Mutex};
+use mppt_common::datatypes::*;
+use mppt_common::Info;
+use mppt_common::INFO_SCALE;
+use std::{path::Path, process::Command};
 
 const DEVICE_ID: u8 = 0x01;
 const RAM_DATA_SIZE: u16 = 0x005B;
@@ -22,11 +23,6 @@ const DEFAULT_SERIAL: &str = if cfg!(target_os = "linux") {
 } else {
     "unknown"
 };
-
-static INFO_SCALE: Mutex<Info> = Mutex::new(Info {
-    v_scale: 1.,
-    i_scale: 1.,
-});
 
 #[derive(Parser)]
 #[clap(disable_help_subcommand = true)]
@@ -61,21 +57,6 @@ enum Commands {
 
     /// Print RAM and EEPROM values to JSON
     PrintJSON,
-}
-
-#[derive(Debug, Clone)]
-struct Info {
-    v_scale: f32,
-    i_scale: f32,
-}
-
-impl Info {
-    pub fn from(data: &[u16]) -> Self {
-        Self {
-            v_scale: data[0] as f32 + (data[1] as f32 / f32::powf(2., 16.)),
-            i_scale: data[2] as f32 + (data[3] as f32 / f32::powf(2., 16.)),
-        }
-    }
 }
 
 fn main() {

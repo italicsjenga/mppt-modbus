@@ -422,12 +422,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mppt-common"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "mppt-control"
 version = "1.0.0"
 dependencies = [
  "bincode",
  "clap 4.0.29",
  "libmodbus-rs",
+ "mppt-common",
  "serde",
  "serde_json",
 ]

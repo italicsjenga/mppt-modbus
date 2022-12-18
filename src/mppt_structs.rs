@@ -1,4 +1,4 @@
-use crate::datatypes::*;
+use mppt_common::datatypes::*;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Debug, Display};
 

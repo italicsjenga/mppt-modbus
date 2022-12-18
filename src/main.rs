@@ -177,10 +177,10 @@ fn get_data(modbus: &Modbus) -> (Info, MpptRam, MpptEeprom) {
         .expect("couldnt");
     let info = Info::from(&data_in);
 
-    let mut a = INFO_SCALE.lock().expect("Couldn't lock info");
-    a.v_scale = info.v_scale;
-    a.i_scale = info.i_scale;
-    drop(a);
+    if let Ok(mut g_info) = INFO_SCALE.lock() {
+        g_info.v_scale = info.v_scale;
+        g_info.i_scale = info.i_scale;
+    };
 
     let ram_data = MpptRam {
         v_pu_hi: Raw::from_u16(data_in[OffsetsRam::V_PU_HI]),

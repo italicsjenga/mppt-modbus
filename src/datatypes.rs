@@ -1,4 +1,5 @@
 use crate::INFO_SCALE;
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Debug};
 
 pub trait DataPoint {
@@ -22,7 +23,7 @@ impl fmt::Debug for dyn DataPoint {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Voltage {
     data: u16,
 }
@@ -59,7 +60,7 @@ impl DataPoint for Voltage {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Current {
     data: u16,
 }
@@ -96,7 +97,7 @@ impl DataPoint for Current {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct VoltagePercentage {
     data: u16,
 }
@@ -131,7 +132,7 @@ impl DataPoint for VoltagePercentage {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Tempcomp {
     data: u16,
 }
@@ -168,7 +169,7 @@ impl DataPoint for Tempcomp {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Raw {
     data: u16,
 }

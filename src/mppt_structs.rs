@@ -1,7 +1,8 @@
 use crate::datatypes::*;
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Debug, Display};
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MpptRam {
     // scaling values
     pub v_pu: f32,
@@ -140,7 +141,7 @@ impl MpptRam {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MpptEeprom {
     pub ev_absorp: Voltage,
     pub ev_float: Voltage,
@@ -265,4 +266,10 @@ eva_ref_fixed_pct_init: {}",
             self.eva_ref_fixed_pct_init.to_string_v()
         )
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MpptData {
+    pub ram: MpptRam,
+    pub eeprom: MpptEeprom,
 }

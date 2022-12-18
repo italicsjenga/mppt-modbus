@@ -4,7 +4,7 @@ mod datatypes;
 mod mppt_structs;
 mod offsets;
 use crate::datatypes::*;
-use crate::mppt_structs::{MpptEeprom, MpptRam};
+use crate::mppt_structs::{MpptData, MpptEeprom, MpptRam};
 use crate::offsets::{OffsetsEeprom, OffsetsRam};
 use clap::{Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
@@ -58,6 +58,9 @@ enum Commands {
 
     /// Get all RAM values
     GetRam,
+
+    /// Print RAM and EEPROM values to JSON
+    PrintJSON,
 }
 
 #[derive(Debug, Clone)]
@@ -163,6 +166,16 @@ fn main() {
         }
         Some(Commands::GetRam) => {
             println!("ram: {:#?}", ram_data);
+        }
+        Some(Commands::PrintJSON) => {
+            println!(
+                "{}",
+                serde_json::to_string(&MpptData {
+                    ram: ram_data,
+                    eeprom: eeprom_data
+                })
+                .expect("Could not format data as JSON!")
+            );
         }
         None => {
             println!("{eeprom_data}");

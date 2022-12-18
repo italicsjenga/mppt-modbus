@@ -1,8 +1,4 @@
-#![allow(incomplete_features)]
 #![allow(dead_code)]
-#![feature(adt_const_params)]
-#![feature(generic_arg_infer)]
-#![feature(generic_const_exprs)]
 
 use std::{
     fmt::{self, Debug, Display},
@@ -415,7 +411,7 @@ fn main() {
                     println!("Writing {} to offset {}", val, offset);
                     modbus
                         .write_register(EEPROM_BEGIN as u16 + offset, val)
-                        .expect("could not set value");
+                        .expect("could not set va   lue");
                 }
                 None => {
                     println!("No modbus device connected");

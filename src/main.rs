@@ -104,13 +104,13 @@ fn main() {
 
     match args.command {
         Some(Commands::Get { name }) => {
-            let t = match_datapoint(name.as_str(), &eeprom_data);
+            let t = eeprom_data.match_datapoint(name.as_str());
             println!("{name}: {}", t.to_string_v());
             return;
         }
         Some(Commands::Set { name, value }) => {
             println!("setting var {}", name);
-            let t = match_datapoint(name.as_str(), &eeprom_data);
+            let t = eeprom_data.match_datapoint(name.as_str());
             println!("Existing value:\n  {:?}", t);
             let val = t.u16_from_f32(value);
             println!(
@@ -285,39 +285,6 @@ fn get_data(modbus: &Modbus) -> (Info, MpptRam, MpptEeprom) {
     };
 
     return (info, ram_data, eeprom_data);
-}
-
-fn match_datapoint(name: &str, data: &MpptEeprom) -> Box<dyn DataPoint> {
-    match name.to_lowercase().as_str() {
-        "ev_absorp" => Box::new(data.ev_absorp),
-        "ev_float" => Box::new(data.ev_float),
-        "et_absorp" => Box::new(data.et_absorp),
-        "et_absorp_ext" => Box::new(data.et_absorp_ext),
-        "ev_absorp_ext" => Box::new(data.ev_absorp_ext),
-        "ev_float_cancel" => Box::new(data.ev_float_cancel),
-        "et_float_exit_cum" => Box::new(data.et_float_exit_cum),
-        "ev_eq" => Box::new(data.ev_eq),
-        "et_eqcalendar" => Box::new(data.et_eqcalendar),
-        "et_eq_above" => Box::new(data.et_eq_above),
-        "et_eq_reg" => Box::new(data.et_eq_reg),
-        "et_batt_service" => Box::new(data.et_batt_service),
-        "ev_tempcomp" => Box::new(data.ev_tempcomp),
-        "ev_hvd" => Box::new(data.ev_hvd),
-        "ev_hvr" => Box::new(data.ev_hvr),
-        "evb_ref_lim" => Box::new(data.evb_ref_lim),
-        "etb_max" => Box::new(data.etb_max),
-        "etb_min" => Box::new(data.etb_min),
-        "ev_soc_g_gy" => Box::new(data.ev_soc_g_gy),
-        "ev_soc_gy_y" => Box::new(data.ev_soc_gy_y),
-        "ev_soc_y_yr" => Box::new(data.ev_soc_y_yr),
-        "ev_soc_yr_r" => Box::new(data.ev_soc_yr_r),
-        "emodbus_id" => Box::new(data.emodbus_id),
-        "emeterbus_id" => Box::new(data.emeterbus_id),
-        "eib_lim" => Box::new(data.eib_lim),
-        "eva_ref_fixed_init" => Box::new(data.eva_ref_fixed_init),
-        "eva_ref_fixed_pct_init" => Box::new(data.eva_ref_fixed_pct_init),
-        &_ => todo!(),
-    }
 }
 
 fn match_offset(name: &str) -> usize {

@@ -403,6 +403,7 @@ impl DataPoint for Raw {
 }
 
 #[derive(Parser)]
+#[clap(disable_help_subcommand = true)]
 #[clap(author, about, long_about = None)]
 struct Args {
     /// Serial port to connect to MPPT

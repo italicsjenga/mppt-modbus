@@ -117,6 +117,11 @@ fn main() {
         (info, ram_data, eeprom_data, None)
     };
 
+    if let Ok(mut info) = INFO_SCALE.lock() {
+        info.v_scale = _info.v_scale;
+        info.i_scale = _info.i_scale;
+    };
+
     match args.command {
         Some(Commands::Get { name }) => {
             let t = match_datapoint(name.as_str(), &eeprom_data);

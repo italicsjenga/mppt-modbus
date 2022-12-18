@@ -426,6 +426,7 @@ name = "mppt-common"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -437,7 +438,6 @@ dependencies = [
  "libmodbus-rs",
  "mppt-common",
  "serde",
- "serde_json",
 ]
 
 [[package]]

@@ -1,12 +1,11 @@
 #![allow(dead_code)]
 
-mod mppt_structs;
 mod offsets;
-use crate::mppt_structs::{MpptData, MpptEeprom, MpptRam};
 use crate::offsets::{OffsetsEeprom, OffsetsRam};
 use clap::{Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
 use mppt_common::datatypes::*;
+use mppt_common::mppt_structs::{MpptData, MpptEeprom, MpptRam};
 use mppt_common::Info;
 use mppt_common::INFO_SCALE;
 use std::{path::Path, process::Command};
@@ -141,10 +140,11 @@ fn main() {
         Some(Commands::PrintJSON) => {
             println!(
                 "{}",
-                serde_json::to_string(&MpptData {
+                MpptData {
                     ram: ram_data,
                     eeprom: eeprom_data
-                })
+                }
+                .to_json()
                 .expect("Could not format data as JSON!")
             );
         }

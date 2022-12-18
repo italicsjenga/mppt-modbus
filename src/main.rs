@@ -76,21 +76,6 @@ impl Info {
             i_scale: data[2] as f32 + (data[3] as f32 / f32::powf(2., 16.)),
         }
     }
-    pub fn scale_power(&self, p: &u16) -> f32 {
-        *p as f32 * self.v_scale * self.i_scale * f32::powf(2., -17.)
-    }
-    pub fn scale_voltage(&self, v: &u16) -> f32 {
-        *v as f32 * self.v_scale * f32::powf(2., -15.)
-    }
-    pub fn scale_current(&self, i: &u16) -> f32 {
-        *i as f32 * self.i_scale * f32::powf(2., -15.)
-    }
-    pub fn scale_voltage_f(&self, v: f32) -> f32 {
-        v * self.v_scale * f32::powf(2., -15.)
-    }
-    pub fn scale_current_f(&self, i: f32) -> f32 {
-        i * self.i_scale * f32::powf(2., -15.)
-    }
 }
 
 fn main() {

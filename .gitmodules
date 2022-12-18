@@ -1,0 +1,3 @@
+[submodule "mppt-common"]
+	path = mppt-common
+	url = https://github.com/italicsjenga/mppt-common

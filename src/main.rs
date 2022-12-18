@@ -11,7 +11,7 @@ use std::{
     sync::Mutex,
 };
 
-use clap::{AppSettings, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
 
 mod offsets;
@@ -403,7 +403,6 @@ impl DataPoint for Raw {
 }
 
 #[derive(Parser)]
-#[clap(global_setting = AppSettings::DisableHelpSubcommand)]
 #[clap(author, about, long_about = None)]
 struct Args {
     /// Serial port to connect to MPPT

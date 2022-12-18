@@ -1,18 +1,14 @@
 #![allow(dead_code)]
 
-use std::{fmt::Debug, path::Path, process::Command, sync::Mutex};
-
+mod datatypes;
+mod mppt_structs;
+mod offsets;
+use crate::datatypes::*;
+use crate::mppt_structs::{MpptEeprom, MpptRam};
+use crate::offsets::{OffsetsEeprom, OffsetsRam};
 use clap::{Parser, Subcommand};
 use libmodbus_rs::{Modbus, ModbusClient, ModbusRTU};
-
-mod offsets;
-use crate::offsets::{OffsetsEeprom, OffsetsRam};
-
-mod datatypes;
-use crate::datatypes::*;
-
-mod mppt_structs;
-use crate::mppt_structs::{MpptEeprom, MpptRam};
+use std::{fmt::Debug, path::Path, process::Command, sync::Mutex};
 
 const DEVICE_ID: u8 = 0x01;
 const RAM_DATA_SIZE: u16 = 0x005B;

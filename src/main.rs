@@ -31,7 +31,7 @@ struct Args {
     #[clap(short, long, default_value = DEFAULT_SERIAL)]
     serial_port: String,
 
-    /// list serial ports on this system
+    /// List serial ports on this system
     #[clap(long)]
     get_serial_ports: bool,
 

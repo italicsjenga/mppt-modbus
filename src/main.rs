@@ -35,6 +35,10 @@ struct Args {
     #[clap(long)]
     get_serial_ports: bool,
 
+    /// Preview changes without writing to EEPROM
+    #[clap(long)]
+    dry_run: bool,
+
     /// Use fake data - for testing
     #[clap(long)]
     fake: bool,
@@ -121,15 +125,33 @@ fn main() {
             match modbus {
                 Some(modbus) => {
                     let offset = match_offset(&name) as u16;
-                    println!("Writing {} to offset {}", val, offset);
-                    modbus
-                        .write_register(EEPROM_BEGIN as u16 + offset, val)
-                        .expect("could not set va   lue");
+                    let text = if args.dry_run {
+                        "Dry run - would write"
+                    } else {
+                        "Writing"
+                    };
+                    println!(
+                        "{} {} ({}) to offset {}",
+                        text,
+                        val,
+                        t.get_scaled_from(val),
+                        offset
+                    );
+                    if !args.dry_run {
+                        modbus
+                            .write_register(EEPROM_BEGIN as u16 + offset, val)
+                            .expect("could not set value");
+                    }
                 }
                 None => {
                     println!("No modbus device connected");
                     let offset = match_offset(&name) as u16;
-                    println!("Would write {} to offset {}", val, offset);
+                    println!(
+                        "Would write {} ({}) to offset {}",
+                        val,
+                        t.get_scaled_from(val),
+                        offset
+                    );
                 }
             }
             return;

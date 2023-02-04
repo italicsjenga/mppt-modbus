@@ -8,7 +8,7 @@ use mppt_common::datatypes::*;
 use mppt_common::mppt_structs::{MpptData, MpptEeprom, MpptRam};
 use mppt_common::Info;
 use mppt_common::INFO_SCALE;
-use std::{path::Path, process::Command};
+use std::path::Path;
 
 const DEVICE_ID: u8 = 0x01;
 const RAM_DATA_SIZE: u16 = 0x005B;
@@ -30,10 +30,6 @@ struct Args {
     /// Serial port to connect to MPPT
     #[clap(short, long, default_value = DEFAULT_SERIAL)]
     serial_port: String,
-
-    /// List serial ports on this system
-    #[clap(long)]
-    get_serial_ports: bool,
 
     /// Preview changes without writing to EEPROM
     #[clap(long)]
@@ -64,19 +60,6 @@ enum Commands {
 
 fn main() {
     let args = Args::parse();
-    if args.get_serial_ports {
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("ls /dev/tty*")
-            .output()
-            .expect("failed to execute process");
-        let s = match std::str::from_utf8(&output.stdout) {
-            Ok(v) => v,
-            Err(e) => panic!("Failed reading internal command output: {}", e),
-        };
-        println!("{}", s);
-        return;
-    }
 
     if !Path::new(&args.serial_port).exists() && !args.fake {
         println!(

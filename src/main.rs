@@ -47,7 +47,7 @@ struct Args {
     command: Option<Commands>,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, PartialEq)]
 enum Commands {
     /// Get single EEPROM value
     Get { name: String },
@@ -87,7 +87,9 @@ fn main() {
     }
 
     let (_info, ram_data, eeprom_data, modbus) = if !args.fake {
-        println!("Connecting to device on {}", args.serial_port);
+        if args.command != Some(Commands::PrintJSON) {
+            println!("Connecting to device on {}", args.serial_port);
+        }
         let modbus = connect_modbus(&args.serial_port);
         let (a, b, c) = get_data(&modbus);
         (a, b, c, Some(modbus))
